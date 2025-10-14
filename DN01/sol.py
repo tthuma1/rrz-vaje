@@ -59,7 +59,8 @@ plt.title('Pravokotna regija je negirana')
 plt.imshow(neg_gray, cmap='gray')
 plt.show()
 
-thresholded = (gray_im > 150).astype(np.uint8)
+# thresholded = (gray_im > 150).astype(np.uint8)
+thresholded = gray_im > 150
 plt.clf()
 plt.title('Upragovana slika')
 plt.imshow(thresholded, cmap='gray')
