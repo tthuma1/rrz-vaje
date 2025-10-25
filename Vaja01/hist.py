@@ -14,3 +14,6 @@ for x in img:
     h[x//2] += 1
 
 print(h)
+
+h2 = np.histogram(img, bins=8, range=[0,16])
+print(h2)
