@@ -112,3 +112,46 @@ plt.title("Histogram slike z numpy (4-bit)")
 plt.bar(np.linspace(0, 15, 16), hist2, width=1)
 
 plt.show()
+
+
+### e)
+
+img = cv2.imread('slike/phone.jpg')
+hist = np.zeros(256)
+
+for i in np.mean(img, axis=2).flatten():
+    hist[int(i)] += 1
+
+def histogram_stretch(img):
+    v_min = np.min(img) #.astype(np.float64)
+    v_max = np.max(img) #.astype(np.float64)
+
+    img_stretched = (img - v_min) * 255.0 / (v_max - v_min)
+    hist_streched = np.zeros(256)
+
+    for i in np.mean(img_stretched, axis=2).flatten():
+        hist_streched[int(i)] += 1
+
+    return img_stretched.astype(np.uint8), hist_streched
+
+plt.clf()
+
+plt.subplot(2, 2, 1)
+plt.title("Phone normalen")
+plt.imshow(img, cmap='gray')
+
+plt.subplot(2, 2, 2)
+plt.title("Histogram phone normalen")
+plt.bar(np.linspace(0, 255, 256), hist, width=1)
+
+im_stretched, hist_streched = histogram_stretch(img)
+
+plt.subplot(2, 2, 3)
+plt.title("Phone stretched")
+plt.imshow(im_stretched, cmap='gray')
+
+plt.subplot(2, 2, 4)
+plt.title("Histogram phone stretched")
+plt.bar(np.linspace(0, 255, 256), hist_streched, width=1)
+
+plt.show()
