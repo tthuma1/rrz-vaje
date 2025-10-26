@@ -16,10 +16,10 @@ for i in range(st_meritev):
     Z = Z0 + 1/2 * acc * t**2 if t != 0 else Z0
     y.append(f * Y/Z)
 
-print(y)
+print(y[:10], "...", y[-10:])
 
 times = np.linspace(0, 30, st_meritev)
 
 plt.clf()
-plt.plot(times, y, "r.")
+plt.plot(times, y, ".")
 plt.show()
