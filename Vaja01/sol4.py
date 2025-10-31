@@ -116,28 +116,56 @@ plt.title('V kanal')
 plt.show()
 
 ### d)
-# Modri kanal
-blue = img_rgb[:,:,2]
 
-# Pragovanje
+blue = img_rgb[...,2]
 blue_thres = blue > 150
 
-hue = img_hsv[:, :, 0]
-
-# Uporabi logične pogoje
-blue_thres_hsv = (hue >= 90) & (hue <= 130)
-
 # Prikaz
-plt.subplot(1,3,1)
+plt.subplot(1,2,1)
 plt.imshow(img_rgb)
 plt.title('Original')
 
-plt.subplot(1,3,2)
+plt.subplot(1,2,2)
 plt.imshow(blue_thres, cmap='gray')
 plt.title('Upragovana slika (B>150)')
 
-plt.subplot(1,3,3)
+plt.show()
+
+### e)
+
+sum_channels = np.sum(img_rgb, axis=2, keepdims=True)
+sum_channels[sum_channels == 0] = 1e-6 # da nimamo deljenja z 0
+
+norm_rgb = img_rgb / sum_channels
+
+blue_thres = norm_rgb[..., 2] > 0.5
+
+# 6. Prikaz rezultatov
+plt.subplot(1,2,1)
+plt.imshow(norm_rgb)
+plt.title('Normaliziran RGB')
+
+plt.subplot(1,2,2)
+plt.imshow(blue_thres, cmap='gray')
+plt.title('Upragovana normalizirana slika (B>150)')
+
+plt.show()
+
+### f)
+
+hue = img_hsv[..., 0]
+blue_thres_hsv = (hue >= 90) & (hue <= 103)
+
+plt.subplot(2,2,1)
+plt.title('RGB slika')
+plt.imshow(img_rgb)
+
+plt.subplot(2,2,2)
+plt.imshow(img_hsv[...,0] / 180.0, cmap='gray') # COLOR_RGB2HSV naredi H na intervalu [0,180]
+plt.title('H kanal')
+
+plt.subplot(2,2,3)
 plt.imshow(blue_thres_hsv, cmap='gray')
-plt.title('Upragovana slika (100<H<130)')
+plt.title('Upragovana HSV slika (90<=H<=133)')
 
 plt.show()
