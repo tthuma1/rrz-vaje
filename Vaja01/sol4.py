@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import math
 import numpy as np
+from matplotlib.widgets import Slider
 
 ### a)
 
@@ -153,19 +154,37 @@ plt.show()
 
 ### f)
 
+plt.clf()
+
 hue = img_hsv[..., 0]
-blue_thres_hsv = (hue >= 90) & (hue <= 103)
 
-plt.subplot(2,2,1)
-plt.title('RGB slika')
-plt.imshow(img_rgb)
+low_init, high_init = 90, 102
 
-plt.subplot(2,2,2)
-plt.imshow(img_hsv[...,0] / 180.0, cmap='gray') # COLOR_RGB2HSV naredi H na intervalu [0,180]
-plt.title('H kanal')
+fig, (ax1, ax2) = plt.subplots(1, 2)
+plt.subplots_adjust(bottom=0.25)
 
-plt.subplot(2,2,3)
-plt.imshow(blue_thres_hsv, cmap='gray')
-plt.title('Upragovana HSV slika (90<=H<=133)')
+ax1.imshow(img_rgb)
+ax1.set_title('RGB slika')
+
+img_thresh = (low_init <= hue) & (hue <= high_init)
+im2 = ax2.imshow(img_thresh, cmap='gray')
+ax2.set_title(f'{low_init} <= H <= {high_init}')
+
+ax_low = plt.axes([0.25, 0.1, 0.55, 0.03])
+ax_high = plt.axes([0.25, 0.05, 0.55, 0.03])
+slider_low = Slider(ax_low, 'Spodnja meja', 0, 179, valinit=low_init, valstep=1)
+slider_high = Slider(ax_high, 'Zgornja meja', 0, 179, valinit=high_init, valstep=1)
+
+# Update callback
+def update(_):
+    low = slider_low.val
+    high = slider_high.val
+    img_thresh = (hue >= low) & (hue <= high)
+    im2.set_data(img_thresh)
+    ax2.set_title(f'{low_init} <= H <= {high_init}')
+    fig.canvas.draw_idle()
+
+slider_low.on_changed(update)
+slider_high.on_changed(update)
 
 plt.show()
