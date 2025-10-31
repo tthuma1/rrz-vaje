@@ -1,7 +1,21 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-proj_fn = lambda f, p: (-f*p[0]/p[2], -f*p[1]/p[2])
+# proj_fn = lambda f, p: (-f*p[0]/p[2], -f*p[1]/p[2])
+
+### a)
+
+# računam v cm
+f = 10
+Z = 1400
+X = 500
+
+x = f * X/Z
+
+print(f"Višina drevesa na zadnji strani škatle: {x:.3f}")
+print()
+
+### b)
 
 Z0 = 1000
 Y = 250
@@ -23,3 +37,20 @@ times = np.linspace(0, 30, st_meritev)
 plt.clf()
 plt.plot(times, y, ".")
 plt.show()
+
+### c)
+
+# računam v mm
+f = 60
+Z = 95000
+
+px_count = 200
+DPI = 2500
+
+# * 10 je za pretvorbo iz cm v mm
+x = px_count / DPI * 2.54 * 10
+
+X = x / f * Z
+X_v_metrih = X / 1000
+
+print(f"Višina valja: {X_v_metrih:.3f}")

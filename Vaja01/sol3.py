@@ -155,3 +155,13 @@ plt.title("Histogram phone stretched")
 plt.bar(np.linspace(0, 255, 256), hist_streched, width=1)
 
 plt.show()
+
+### f)
+
+img = cv2.imread('slike/umbrellas.jpg')
+img = np.mean(img, axis=2).astype(np.uint8)
+ret2,th2 = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+
+plt.clf()
+plt.imshow(th2, cmap='gray')
+plt.show()

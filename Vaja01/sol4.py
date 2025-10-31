@@ -1,5 +1,38 @@
 import cv2
 import matplotlib.pyplot as plt
+import matplotlib
+
+### a)
+
+R = 255
+G = 34
+B = 126
+
+C_high = max(R,G,B) # 255
+C_low = min(R,G,B) # 34
+C_rng = C_high - C_low # 221
+
+S = C_rng / C_high if C_high > 0 else 0 # 0.87
+V = C_high / 255 # 1
+
+R_0 = (C_high - R) / C_rng
+G_0 = (C_high - G) / C_rng
+B_0 = (C_high - B) / C_rng
+
+if R == C_high:
+    H_0 = B_0 - G_0
+elif G == C_high:
+    H_0 = R_0 - B_0 + 2
+elif B == C_high:
+    H_0 = G_0 - R_0 + 4
+
+H = 1/6 * (H_0 + 6) if H_0 < 0 else 1/6 * H_0
+
+print(f"RGB ({R}, {G}, {B}) = HSV ({H}, {S}, {V})")
+print("HSV z matplotlib funkcijo:", matplotlib.colors.rgb_to_hsv([R/255, G/255, B/255]))
+print()
+
+
 
 # 1. Branje slike
 img = cv2.imread('slike/trucks.jpg')
