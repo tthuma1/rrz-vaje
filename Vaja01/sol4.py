@@ -154,37 +154,46 @@ plt.show()
 
 ### f)
 
-plt.clf()
+def hsv_thresholding(filepath):
+    img = cv2.imread(filepath)
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-hue = img_hsv[..., 0]
+    hue = img_hsv[..., 0]
 
-low_init, high_init = 90, 102
+    low_init, high_init = 90, 102
 
-fig, (ax1, ax2) = plt.subplots(1, 2)
-plt.subplots_adjust(bottom=0.25)
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+    plt.subplots_adjust(bottom=0.25)
 
-ax1.imshow(img_rgb)
-ax1.set_title('RGB slika')
+    ax1.imshow(img_rgb)
+    ax1.set_title('RGB slika')
 
-img_thresh = (low_init <= hue) & (hue <= high_init)
-im2 = ax2.imshow(img_thresh, cmap='gray')
-ax2.set_title(f'{low_init} <= H <= {high_init}')
-
-ax_low = plt.axes([0.25, 0.1, 0.55, 0.03])
-ax_high = plt.axes([0.25, 0.05, 0.55, 0.03])
-slider_low = Slider(ax_low, 'Spodnja meja', 0, 179, valinit=low_init, valstep=1)
-slider_high = Slider(ax_high, 'Zgornja meja', 0, 179, valinit=high_init, valstep=1)
-
-# Update callback
-def update(_):
-    low = slider_low.val
-    high = slider_high.val
-    img_thresh = (hue >= low) & (hue <= high)
-    im2.set_data(img_thresh)
+    img_thresh = (low_init <= hue) & (hue <= high_init)
+    im2 = ax2.imshow(img_thresh, cmap='gray')
     ax2.set_title(f'{low_init} <= H <= {high_init}')
-    fig.canvas.draw_idle()
 
-slider_low.on_changed(update)
-slider_high.on_changed(update)
+    ax_low = plt.axes([0.25, 0.1, 0.55, 0.03])
+    ax_high = plt.axes([0.25, 0.05, 0.55, 0.03])
+    slider_low = Slider(ax_low, 'Spodnja meja', 0, 179, valinit=low_init, valstep=1)
+    slider_high = Slider(ax_high, 'Zgornja meja', 0, 179, valinit=high_init, valstep=1)
 
-plt.show()
+    # Update callback
+    def update(_):
+        low = slider_low.val
+        high = slider_high.val
+        img_thresh = (hue >= low) & (hue <= high)
+        im2.set_data(img_thresh)
+        ax2.set_title(f'{low} <= H <= {high}')
+        fig.canvas.draw_idle()
+
+    slider_low.on_changed(update)
+    slider_high.on_changed(update)
+
+    plt.show()
+
+hsv_thresholding('slike/trucks.jpg')
+
+### g)
+
+hsv_thresholding('slike/color_wheel.jpg')
