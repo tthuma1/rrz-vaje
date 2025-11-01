@@ -4,6 +4,7 @@ import matplotlib
 import math
 import numpy as np
 from matplotlib.widgets import Slider
+import matplotlib.patches
 
 ### a)
 
@@ -58,6 +59,34 @@ plt.imshow(labels, cmap='magma')
 plt.show()
 
 
+### c)
+
+fig, ax = plt.subplots()
+
+centroidi = []
+boxes = []
+
+for i in range(num_labels):
+    if i == 0: continue
+
+    koordinate = np.argwhere(labels == i)
+    cy, cx = koordinate.mean(axis=0)
+    centroidi.append((cx, cy))
+
+    y_min, x_min = koordinate.min(axis=0)
+    y_max, x_max = koordinate.max(axis=0)
+    boxes.append((x_min, y_min, x_max - x_min, y_max - y_min))
+
+for i in range(num_labels - 1):
+    cx, cy = centroidi[i]
+    plt.scatter(cx, cy)
+
+    x, y, w, h = boxes[i]
+    rect = matplotlib.patches.Rectangle((x, y), w, h, edgecolor='red', facecolor='none')
+    ax.add_patch(rect)
+
+plt.imshow(labels, cmap='magma')
+plt.show()
 
 
 # I = I.astype(np.uint8)
