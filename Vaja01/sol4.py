@@ -197,3 +197,33 @@ hsv_thresholding('slike/trucks.jpg')
 ### g)
 
 hsv_thresholding('slike/color_wheel.jpg')
+
+### h)
+
+def im_mask(im, mask):
+    return im * mask
+
+im = cv2.imread('slike/trucks.jpg')
+im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+
+mask = np.random.randint(0, 2, size=(im.shape[0], im.shape[1]), dtype=np.uint8)
+
+mask[:200, :100] = 1
+mask[20:60, 60:70] = 0
+mask[-100:, -200:] = 0
+
+mask = np.expand_dims(mask, axis=2) # dodaj channel dimenzijo
+mask = np.repeat(mask, 3, axis=2) # channel dimenzija naj ima 3 channele
+
+plt.subplot(2,2,1)
+plt.imshow(im)
+plt.title('Originalna slika')
+
+plt.subplot(2,2,2)
+plt.imshow(mask * 255)
+plt.title('Maska')
+
+plt.subplot(2,2,3)
+plt.imshow(im_mask(im, mask))
+plt.title('Slika z masko')
+plt.show()
