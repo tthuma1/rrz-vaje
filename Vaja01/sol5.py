@@ -129,6 +129,59 @@ plt.show()
 # 0 0 0 0 0 0 0 0 0
 
 
+### e)
+
+img = cv2.imread('slike/regions_noise.png', cv2.IMREAD_GRAYSCALE)
+
+_, binary = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)
+num_labels, labels = cv2.connectedComponents(binary)
+
+print("Število regij regions_noise (vključno z ozadjem):", num_labels)
+
+plt.subplot(1,2,1)
+plt.imshow(binary, cmap='gray')
+plt.title('Binariziran regions_noise')
+
+plt.subplot(1,2,2)
+plt.imshow(labels, cmap='magma')
+plt.title('Regije regions_noise')
+plt.show()
+
+# Dobimo zelo veliko zelo majhnih regij. Piksli šuma postanejo svoje regije.
+
+### f)
+
+plt.subplot(2,2,1)
+plt.imshow(binary, cmap='gray')
+plt.title('Original')
+
+erode = cv2.erode(binary, cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3)))
+dilate = cv2.dilate(binary, cv2.getStructuringElement(cv2.MORPH_RECT, (3,3)))
+dilate2 = cv2.dilate(binary, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5)))
+
+print(cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3)))
+
+plt.subplot(2,2,2)
+plt.imshow(erode, cmap='gray')
+plt.title('Erode (cross 3x3)')
+
+plt.subplot(2,2,3)
+plt.imshow(dilate, cmap='gray')
+plt.title('Dilate (rect 3x3)')
+
+plt.subplot(2,2,4)
+plt.imshow(dilate2, cmap='gray')
+plt.title('Dilate (ellipse 5x5)')
+
+plt.show()
+
+
+### g)
+
+
+
+
+
 
 # I = I.astype(np.uint8)
 # k = np.array()
