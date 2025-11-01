@@ -1,3 +1,9 @@
+import cv2
+import matplotlib.pyplot as plt
+import matplotlib
+import math
+import numpy as np
+from matplotlib.widgets import Slider
 
 ### a)
 
@@ -37,6 +43,20 @@
 # 0 0 0 0 0 0 7 7 7
 # 0 9 0 0 0 7 7 7 7
 # 9 9 0 0 0 0 0 0 7
+
+
+### b)
+
+img = cv2.imread('slike/regions.png', cv2.IMREAD_GRAYSCALE)
+
+_, binary = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)
+num_labels, labels = cv2.connectedComponents(binary)
+
+print("Število regij (vključno z ozadjem):", num_labels)
+
+plt.imshow(labels, cmap='magma')
+plt.show()
+
 
 
 
