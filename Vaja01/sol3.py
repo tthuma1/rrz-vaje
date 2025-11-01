@@ -158,10 +158,26 @@ plt.show()
 
 ### f)
 
-img = cv2.imread('slike/umbrellas.jpg')
+img = cv2.imread('slike/phone.jpg')
 img = np.mean(img, axis=2).astype(np.uint8)
-ret2,th2 = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+ret2, th2 = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+
+th3 = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,\
+            cv2.THRESH_BINARY,11,2)
 
 plt.clf()
+
+plt.subplot(1,2,1)
 plt.imshow(th2, cmap='gray')
+plt.title("Upragovanje z Otsujevo metodo")
+
+plt.subplot(1,2,2)
+plt.imshow(th3, cmap='gray')
+plt.title("Adaptivno Gaussovo upragovanje")
+
 plt.show()
+
+### g)
+
+# Na slikah, ki imajo na histogramu dva izrazita vrhova, med katerima je "praznina" v histogramu.
+# Torej imamo dve jasni skupini v histogramu (med ozadjem in objektom je velik kontrast, vmes pa ni ostalih sivin).
