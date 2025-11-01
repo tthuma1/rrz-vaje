@@ -159,8 +159,6 @@ erode = cv2.erode(binary, cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3)))
 dilate = cv2.dilate(binary, cv2.getStructuringElement(cv2.MORPH_RECT, (3,3)))
 dilate2 = cv2.dilate(binary, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5)))
 
-print(cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3)))
-
 plt.subplot(2,2,2)
 plt.imshow(erode, cmap='gray')
 plt.title('Erode (cross 3x3)')
@@ -178,10 +176,48 @@ plt.show()
 
 ### g)
 
+# ročno
+erode = cv2.erode(binary, cv2.getStructuringElement(cv2.MORPH_RECT, (3,3)))
+opened = cv2.dilate(erode, cv2.getStructuringElement(cv2.MORPH_RECT, (3,3)))
 
+dilate = cv2.dilate(binary, cv2.getStructuringElement(cv2.MORPH_RECT, (3,3)))
+closed = cv2.erode(dilate, cv2.getStructuringElement(cv2.MORPH_RECT, (3,3)))
 
+plt.subplot(3,2,1)
+plt.imshow(binary, cmap='gray')
+plt.title('Original')
 
+plt.subplot(3,2,3)
+plt.imshow(opened, cmap='gray')
+plt.title('Odpiranje')
 
+plt.subplot(3,2,5)
+plt.imshow(closed, cmap='gray')
+plt.title('Zapiranje')
+
+# morphologyEx
+
+opened2 = cv2.morphologyEx(binary, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_RECT, (3,3)))
+closed2 = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_RECT, (3,3)))
+
+plt.subplot(3,2,4)
+plt.imshow(opened2, cmap='gray')
+plt.title('Odpiranje (morphologyEx)')
+
+plt.subplot(3,2,6)
+plt.imshow(closed2, cmap='gray')
+plt.title('Zapiranje (morphologyEx)')
+
+# erode + close
+opened3 = cv2.morphologyEx(binary, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_RECT, (3,3)))
+no_noise = cv2.morphologyEx(opened3, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_RECT, (3,3)))
+
+plt.subplot(3,2,2)
+plt.imshow(no_noise, cmap='gray')
+plt.title('Brez šuma')
+
+plt.tight_layout()
+plt.show()
 
 # I = I.astype(np.uint8)
 # k = np.array()
