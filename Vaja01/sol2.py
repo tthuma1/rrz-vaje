@@ -71,3 +71,26 @@ X_v_metrih = X / 1000
 print(f"Višina valja: {X_v_metrih:.3f}")
 
 ### d)
+
+# f = x * Z / X
+fs = []
+
+# Realne višina objekta: 15.4 cm
+X = 15.4
+
+# 36 cm -> 458 px
+
+fs.append(458 * 36 /)
+
+# 47 cm -> 366 px
+
+# 55.5 cm -> 312 px
+
+# 64 cm -> 276 px
+
+# 75 cm -> 240 px
+
+# 86.5 cm -> 210 px
+
+# ----------------
+
