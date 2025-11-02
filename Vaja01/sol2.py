@@ -40,6 +40,21 @@ plt.show()
 
 ### c)
 
+# Zakaj se kamere z luknjico uporabljajo bolj kot teoretičen model in ne tudi v praksi?
+#   Kot teoretični model se uporablja zaradi linearnosti - enostavno je računati padanje svetlobe na senzor, ker so samo ravne črte; nimamo leč, ki bi ukrivile svetlobo. V praksi se ne uporabljajo, ker so zaradi majhne luknjice potrebni dolgi časi osvetljevanja (če luknjico povečaš, dobiš zamegljeno sliko).
+
+# Naštejte prednosti in slabosti kamer z lečami.
+#
+# Prednosti:
+# - Manjši čas osvetlitve, ker z lečo zberejo več svetlobe in imajo večjo luknjo.
+# - Lahko spreminjamo goriščno razdaljo in s tem kateri predmet je v fokusu.
+# Slabosti:
+# - Računanje padanja svetlobe ni linearno.
+# - Slika se lahko popači, pride do npr. ukrivljanja ravnih črt na robovih slike.
+
+
+### d)
+
 # računam v mm
 f = 60
 Z = 95000
@@ -54,3 +69,5 @@ X = x / f * Z
 X_v_metrih = X / 1000
 
 print(f"Višina valja: {X_v_metrih:.3f}")
+
+### d)
