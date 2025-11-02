@@ -222,7 +222,7 @@ plt.show()
 
 ### h)
 
-img= cv2.imread('slike/bird.jpg')
+img = cv2.imread('slike/bird.jpg')
 
 img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 value = img_hsv[..., 2]
@@ -266,9 +266,17 @@ plt.subplot(2,3,5)
 plt.imshow(res, cmap='gray')
 plt.title('Končna maska')
 
-# plt.subplot(2,3,6)
-# plt.imshow(res, cmap='gray')
-# plt.title('RGB z masko')
+num_labels, labels = cv2.connectedComponents(res.astype(np.uint8))
+print("\nŠtevilo regij bird:", num_labels)
+
+res = res == 255.0
+res = np.expand_dims(res, axis=2)
+res = np.repeat(res, 3, axis=2)
+img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+plt.subplot(2,3,6)
+plt.imshow(img * res, cmap='gray')
+plt.title('RGB z masko')
 
 plt.tight_layout()
 plt.show()
