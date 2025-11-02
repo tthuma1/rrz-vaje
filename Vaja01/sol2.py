@@ -81,8 +81,8 @@ fs = []
 # Realne višina objekta: 15.4 cm
 X = 15.4
 
-# 36 cm -> 459 px
-fs.append(459 * 36 / X)
+# 37 cm -> 459 px
+fs.append(459 * 37 / X)
 
 # 47 cm -> 366 px
 fs.append(366 * 47 / X)
@@ -113,13 +113,13 @@ ocena = f_avg * X / 58.5
 real = 303
 print("Ocena 58.5 cm ->", round(ocena, 2), "px")
 print("Realno 58.5 cm ->", real, "px")
-print("Napaka:", round(abs(real - ocena), 2), "px =", round(abs(real - ocena) / real * 100, 1), "%")
+print("Napaka: ", round(abs(real - ocena), 2), " px = ", round(abs(real - ocena) / real * 100, 1), "%", sep="")
 
-# 115 cm -> 162 px
+# 115 cm -> 160 px
 print()
 ocena = f_avg * X / 115
-real = 162
+real = 160
 print("Ocena 115 cm ->", round(ocena, 2), "px")
 print("Realno 115 cm ->", real, "px")
-print("Napaka:", round(abs(real - ocena), 2), "px =", round(abs(real - ocena) / real * 100, 1), "%")
+print("Napaka: ", round(abs(real - ocena), 2), " px = ", round(abs(real - ocena) / real * 100, 1), "%", sep="")
 
