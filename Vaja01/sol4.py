@@ -121,7 +121,6 @@ plt.show()
 blue = img_rgb[...,2]
 blue_thres = blue > 150
 
-# Prikaz
 plt.subplot(1,2,1)
 plt.imshow(img_rgb)
 plt.title('Original')
@@ -134,21 +133,27 @@ plt.show()
 
 ### e)
 
-sum_channels = np.sum(img_rgb, axis=2, keepdims=True)
+# sum_channels = np.sum(img_rgb, axis=2, keepdims=True)
+# sum_channels[sum_channels == 0] = 1e-6 # da nimamo deljenja z 0
+
+# norm_rgb = img_rgb / sum_channels
+
+# blue_thres = norm_rgb[..., 2] > 0.5
+
+sum_channels = np.sum(img_rgb, axis=2)
 sum_channels[sum_channels == 0] = 1e-6 # da nimamo deljenja z 0
 
-norm_rgb = img_rgb / sum_channels
+norm_rgb = img_rgb[...,2] / sum_channels
 
-blue_thres = norm_rgb[..., 2] > 0.5
+blue_thres = norm_rgb > 0.5
 
-# 6. Prikaz rezultatov
 plt.subplot(1,2,1)
 plt.imshow(norm_rgb)
 plt.title('Normaliziran RGB')
 
 plt.subplot(1,2,2)
 plt.imshow(blue_thres, cmap='gray')
-plt.title('Upragovana normalizirana slika (B>150)')
+plt.title('Upragovana normalizirana slika (B>0.5)')
 
 plt.show()
 
@@ -197,7 +202,6 @@ hsv_thresholding('slike/trucks.jpg')
 ### g)
 
 hsv_thresholding('slike/color_wheel.jpg')
-hsv_thresholding('slike/image.png')
 
 ### h)
 
