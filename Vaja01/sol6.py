@@ -38,7 +38,7 @@ def part_b():
     cap.release()
     cv2.destroyAllWindows()
 
-part_b()
+# part_b()
 
 def part_c():
     cap = cv2.VideoCapture(0) # 0 = privzeta spletna kamera
@@ -54,28 +54,27 @@ def part_c():
             break
 
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        hue = hsv[..., 0]
 
-        # mask = (40 <= hue) & (hue <= 60)
-        # mask = mask.astype(np.uint8) # * 255
-        # mask = np.expand_dims(mask, axis=2)
-        # mask = np.repeat(mask, 3, axis=2)
+        # omeji po h, v in s
+        # mask = cv2.inRange(hsv, (90, 50, 50), (150, 255, 255))
+        hue = hsv[...,0]
+        sat = hsv[...,1]
+        val = hsv[...,2]
+        mask = (90 <= hue) & (hue <= 150) & (sat >= 50) & (val >= 50)
+        mask = mask.astype(np.uint8) * 255
 
-        mask = cv2.inRange(hsv, (40, 100, 100), (60, 255, 255))
-
-        kernel = np.ones((5, 5), np.uint8)
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5,5))
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
         mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
 
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     
-        result = frame.copy()
-        cv2.drawContours(result, contours, -1, (0, 255, 0), 2)
+        cv2.drawContours(frame, contours, -1, (0, 255, 0), 3)
 
+        mask_bgr = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
 
         # Prikaži trenutno sliko
-        # cv2.imshow('frame', np.vstack((np.hstack((frame, result)), mask)))
-        cv2.imshow('frame', np.hstack((frame, result)))
+        cv2.imshow('frame', np.vstack((mask_bgr, frame)))
 
         # Ob pritisku tipke 'q' prekini izvajanje funkcije
         if cv2.waitKey(1) & 0xFF == ord('q'):

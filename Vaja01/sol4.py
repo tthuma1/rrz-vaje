@@ -197,6 +197,7 @@ hsv_thresholding('slike/trucks.jpg')
 ### g)
 
 hsv_thresholding('slike/color_wheel.jpg')
+hsv_thresholding('slike/image.png')
 
 ### h)
 
