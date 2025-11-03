@@ -78,7 +78,7 @@ print()
 # f = x * Z / X
 fs = []
 
-# Realne višina objekta: 15.4 cm
+# Realna višina objekta: 15.4 cm
 X = 15.4
 
 # 37 cm -> 459 px
