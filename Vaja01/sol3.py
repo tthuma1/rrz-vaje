@@ -127,8 +127,8 @@ def histogram_stretch(img):
     v_max = np.max(img) #.astype(np.float64)
 
     img_stretched = (img - v_min) * 255.0 / (v_max - v_min)
-    hist_streched = np.zeros(256)
 
+    hist_streched = np.zeros(256)
     for i in np.mean(img_stretched, axis=2).flatten():
         hist_streched[int(i)] += 1
 
@@ -154,6 +154,7 @@ plt.subplot(2, 2, 4)
 plt.title("Histogram phone stretched")
 plt.bar(np.linspace(0, 255, 256), hist_streched, width=1)
 
+plt.tight_layout()
 plt.show()
 
 ### f)
@@ -175,6 +176,7 @@ plt.subplot(1,2,2)
 plt.imshow(th3, cmap='gray')
 plt.title("Adaptivno Gaussovo upragovanje")
 
+plt.tight_layout()
 plt.show()
 
 ### g)
