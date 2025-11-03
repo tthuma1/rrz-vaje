@@ -12,7 +12,7 @@ X = 500
 
 x = f * X/Z
 
-print(f"Višina drevesa na zadnji strani škatle: {x:.3f}")
+print(f"Višina drevesa na zadnji strani škatle: {x:.3f} cm")
 print()
 
 ### b)
@@ -30,18 +30,21 @@ for i in range(st_meritev):
     Z = Z0 + 1/2 * acc * t**2 if t != 0 else Z0
     y.append(f * Y/Z)
 
-print(y[:10], "...", y[-10:])
+print(y[:11], "...", y[-11:])
 
 times = np.linspace(0, 30, st_meritev)
 
 plt.clf()
 plt.plot(times, y, ".")
+plt.xlabel("Čas [s]")
+plt.ylabel("Velikost v kameri [cm]")
 plt.show()
 
 ### c)
 
 # Zakaj se kamere z luknjico uporabljajo bolj kot teoretičen model in ne tudi v praksi?
-#   Kot teoretični model se uporablja zaradi linearnosti - enostavno je računati padanje svetlobe na senzor, ker so samo ravne črte; nimamo leč, ki bi ukrivile svetlobo. V praksi se ne uporabljajo, ker so zaradi majhne luknjice potrebni dolgi časi osvetljevanja (če luknjico povečaš, dobiš zamegljeno sliko).
+#   Kot teoretični model se uporablja zaradi linearnosti - enostavno je računati padanje svetlobe na senzor, ker so samo ravne črte; nimamo leč, ki bi ukrivile svetlobo.
+#   V praksi se ne uporabljajo, ker so zaradi majhne luknjice potrebni dolgi časi osvetljevanja (če luknjico povečaš, dobiš zamegljeno sliko).
 
 # Naštejte prednosti in slabosti kamer z lečami.
 #
@@ -69,7 +72,7 @@ X = x / f * Z
 X_v_metrih = X / 1000
 
 print()
-print(f"Višina valja: {X_v_metrih:.3f}")
+print(f"Višina valja: {X_v_metrih:.3f} m")
 
 ### d)
 
@@ -102,8 +105,8 @@ fs.append(210 * 86.5 / X)
 f_avg = np.mean(fs)
 print("Ocenjene goriščne razdalje [px]:", fs)
 print("Povprečna goriščna razdalja [px]:", f_avg)
-print("Povprečna napaka [px]:", np.array([abs(f_avg - f) for f in fs]))
-print("Povprečna napaka [%]:", np.array([abs(f_avg - f) / f_avg * 100 for f in fs]))
+print("Povprečna napaka [px]:", np.mean(np.array([abs(f_avg - f) for f in fs])))
+print("Povprečna napaka [%]:", np.mean(np.array([abs(f_avg - f) / f_avg * 100 for f in fs])))
 
 # ---------------- testi -------------
 
