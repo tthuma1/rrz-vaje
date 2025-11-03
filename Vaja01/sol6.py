@@ -38,7 +38,7 @@ def part_b():
     cap.release()
     cv2.destroyAllWindows()
 
-# part_b()
+part_b()
 
 def part_c():
     cap = cv2.VideoCapture(0) # 0 = privzeta spletna kamera
