@@ -1,5 +1,6 @@
-
 import numpy as np
+import math
+import matplotlib.pyplot as plt
 
 ### a)
 
@@ -32,6 +33,7 @@ signal = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 5.0, 0.0,
 kernel = [0.0022181959, 0.0087731348, 0.027023158, 0.064825185,
 0.12110939, 0.17621312, 0.19967563, 0.17621312, 0.12110939, 0.064825185,
 0.027023158, 0.0087731348, 0.0022181959]
+print(sum(kernel))
 
 print("Rezultat konvolucije:", simple_convolution(signal, kernel))
 
@@ -54,3 +56,39 @@ print("Rezultat konvolucije z numpy:", np.convolve(signal, kernel, mode='valid')
 #     np.convolve obravnava še robne vrednosti z zero paddingom (okoli signala doda N ničel).
 #     S parametrom mode lahko nastavimo koliko robnih vrednosti obravnava.
 #     Parameter 'same' premika sredino jedro od začetka do konca signala.
+
+
+### d)
+
+def simple_gauss(sigma):
+    x = np.linspace(-3*sigma, 3*sigma, 2 * math.ceil(3 * sigma) + 1)
+    # res = (1 / (sigma * math.sqrt(2 * math.pi))) * np.exp(-x**2 / (2 * sigma**2))
+    res = np.exp(-x**2 / (2 * sigma**2)) # prvi faktor lahko spustiš, ker itak potem normaliziraš (prvi faktor samo raztegne po y-osi)
+    res /= np.sum(res)
+    
+    return res
+
+print()
+print("Gaussovo jedro (1):", simple_gauss(1))
+print("Vsota elementov v Gaussovem jedru:", np.sum(simple_gauss(1)))
+
+### e)
+
+print()
+def draw_gauss(sigmas):
+    for i, sigma in enumerate(sigmas):
+        kernel = simple_gauss(sigma)
+        x = np.linspace(-3*sigma, 3*sigma, 2 * math.ceil(3 * sigma) + 1)
+
+        print("Vsota elementov v Gaussovem jedru:", np.sum(kernel))
+
+        plt.subplot(2,3,i+1)
+        plt.scatter(x, kernel)
+        plt.xlabel("x")
+        plt.xlabel("y")
+        plt.title("Gauss sigma = " + str(sigma))
+
+    plt.tight_layout()
+    plt.show()
+
+draw_gauss([0.5, 1, 2, 3, 4])
