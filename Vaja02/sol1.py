@@ -70,7 +70,7 @@ def simple_gauss(sigma):
 
 print()
 print("Gaussovo jedro (1):", simple_gauss(1))
-print("Vsota elementov v Gaussovem jedru:", np.sum(simple_gauss(1)))
+print("Vsota elementov v Gaussovem jedru (1):", np.sum(simple_gauss(1)))
 
 ### e)
 
@@ -80,7 +80,7 @@ def draw_gauss(sigmas):
         kernel = simple_gauss(sigma)
         x = np.linspace(-3*sigma, 3*sigma, 2 * math.ceil(3 * sigma) + 1)
 
-        print("Vsota elementov v Gaussovem jedru:", np.sum(kernel))
+        print("Vsota elementov v Gaussovem jedru (" + str(sigma) + "):", np.sum(kernel))
 
         plt.subplot(2,3,i+1)
         plt.scatter(x, kernel)
