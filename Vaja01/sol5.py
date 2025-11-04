@@ -214,7 +214,7 @@ no_noise = cv2.morphologyEx(opened3, cv2.MORPH_CLOSE, cv2.getStructuringElement(
 
 plt.subplot(3,2,2)
 plt.imshow(no_noise, cmap='gray')
-plt.title('Brez šuma')
+plt.title('Brez šuma (open + close)')
 
 plt.tight_layout()
 plt.show()
