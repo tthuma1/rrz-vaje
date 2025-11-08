@@ -1,3 +1,4 @@
+import cv2
 import numpy as np
 import math
 import matplotlib.pyplot as plt
@@ -83,7 +84,7 @@ def draw_gauss(sigmas):
         print("Vsota elementov v Gaussovem jedru (" + str(sigma) + "):", np.sum(kernel))
 
         plt.subplot(2,3,i+1)
-        plt.scatter(x, kernel)
+        plt.plot(x, kernel)
         plt.xlabel("x")
         plt.ylabel("y")
         plt.title("Gauss sigma = " + str(sigma))
@@ -119,22 +120,93 @@ print("signal ⊗ (k1 ⊗ k2):", [round(x, 2) for x in conv3.tolist()])
 print("Ali so vsi trije signali enakovredni:", np.all([np.allclose(conv1, conv2), np.allclose(conv2, conv3), np.allclose(conv1, conv3)]))
 
 plt.subplot(2,2,1)
-plt.scatter(np.arange(len(conv1)), conv1)
+plt.plot(np.arange(len(signal)), signal)
+plt.xlabel("x")
+plt.ylabel("y")
+plt.title("signal")
+
+plt.subplot(2,2,2)
+plt.plot(np.arange(len(conv1)), conv1)
 plt.xlabel("x")
 plt.ylabel("y")
 plt.title("(signal ⊗ k1) ⊗ k2")
 
-plt.subplot(2,2,2)
-plt.scatter(np.arange(len(conv2)), conv2)
+plt.subplot(2,2,3)
+plt.plot(np.arange(len(conv2)), conv2)
 plt.xlabel("x")
 plt.ylabel("y")
 plt.title("(signal ⊗ k2) ⊗ k1")
 
-plt.subplot(2,2,3)
-plt.scatter(np.arange(len(conv3)), conv3)
+plt.subplot(2,2,4)
+plt.plot(np.arange(len(conv3)), conv3)
 plt.xlabel("x")
 plt.ylabel("y")
 plt.title("signal ⊗ (k1 ⊗ k2)")
 
 plt.tight_layout()
 plt.show()
+
+### h)
+
+def gauss_filter():
+    im = cv2.imread('slike/lena.png')
+    im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+
+    k = np.expand_dims(simple_gauss(3), axis=1)
+    kT = k.T
+    k_2d = k@k.T
+
+    im_gauss1 = cv2.filter2D(cv2.filter2D(im, -1, k), -1, kT)
+    im_gauss2 = cv2.filter2D(im, -1, k_2d)
+
+    print()
+    print("Ali je rezultat ločenega Gaussovega jedra enak:", np.allclose(im_gauss1, im_gauss2, rtol=0.1, atol=0.1))
+
+    plt.subplot(2,2,1)
+    plt.imshow(im)
+    plt.title("Originalna slika")
+
+    plt.subplot(2,2,2)
+    plt.imshow(im_gauss1)
+    plt.title("(Slika ⊗ k) ⊗ k.T")
+
+    plt.subplot(2,2,3)
+    plt.imshow(im_gauss2)
+    plt.title("Slika ⊗ (k ⋅ k.T)")
+
+    plt.tight_layout()
+    plt.show()
+
+    im_g = cv2.imread('slike/lena_gauss.png')
+    im_g = cv2.cvtColor(im_g, cv2.COLOR_BGR2RGB)
+    im_sp = cv2.imread('slike/lena_sp.png')
+    im_sp = cv2.cvtColor(im_sp, cv2.COLOR_BGR2RGB)
+
+    k = np.expand_dims(simple_gauss(2), axis=1)
+    kT = k.T
+
+    im_g_filt = cv2.filter2D(cv2.filter2D(im_g, -1, k), -1, kT)
+    im_sp_filt = cv2.filter2D(cv2.filter2D(im_sp, -1, k), -1, kT)
+
+    plt.subplot(2,2,1)
+    plt.imshow(im_g)
+    plt.title("Gaussov šum")
+
+    plt.subplot(2,2,2)
+    plt.imshow(im_sp)
+    plt.title("Sol poper šum")
+
+    plt.subplot(2,2,3)
+    plt.imshow(im_g_filt)
+    plt.title("Gauss filtriran")
+
+    plt.subplot(2,2,4)
+    plt.imshow(im_sp_filt)
+    plt.title("Sol poper filtriran")
+
+    plt.tight_layout()
+    plt.show()
+
+
+gauss_filter()
+# Gaussov filter bolje filtrira Gaussov šum kot sol-poper šum.
