@@ -55,7 +55,7 @@ print("Rezultat konvolucije z numpy:", np.convolve(signal, kernel, mode='valid')
 # V čem se ta funkcije razlikuje od vaše implementacije simple_convolution()?
 #     np.convolve obravnava še robne vrednosti z zero paddingom (okoli signala doda N ničel).
 #     S parametrom mode lahko nastavimo koliko robnih vrednosti obravnava.
-#     Parameter 'same' premika sredino jedro od začetka do konca signala.
+#     Parameter 'same' premika sredino jedro od prvega elementa signala do zadnjega.
 
 
 ### d)
@@ -85,10 +85,56 @@ def draw_gauss(sigmas):
         plt.subplot(2,3,i+1)
         plt.scatter(x, kernel)
         plt.xlabel("x")
-        plt.xlabel("y")
+        plt.ylabel("y")
         plt.title("Gauss sigma = " + str(sigma))
 
     plt.tight_layout()
     plt.show()
 
 draw_gauss([0.5, 1, 2, 3, 4])
+
+### f)
+
+# Prvo jedro zgledi robove, drugo jedro zazna robove.
+# Pri drugem jedru bo naraščanje signala naredilo špico gor, padanje pa špico dol.
+# Hitreje kot signal narašča/pada, večja bo špica.
+
+### g)
+
+signal = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 5.0, 0.0,
+0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 5.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0,
+0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+
+k1 = simple_gauss(2)
+k2 = np.array([0.1, 0.6, 0.4])
+
+conv1 = np.convolve(np.convolve(signal, k1), k2)
+conv2 = np.convolve(np.convolve(signal, k2), k1)
+conv3 = np.convolve(signal, np.convolve(k1, k2))
+
+print()
+print("(signal ⊗ k1) ⊗ k2:", [round(x, 2) for x in conv1.tolist()])
+print("(signal ⊗ k2) ⊗ k1:", [round(x, 2) for x in conv2.tolist()])
+print("signal ⊗ (k1 ⊗ k2):", [round(x, 2) for x in conv3.tolist()])
+print("Ali so vsi trije signali enakovredni:", np.all([np.allclose(conv1, conv2), np.allclose(conv2, conv3), np.allclose(conv1, conv3)]))
+
+plt.subplot(2,2,1)
+plt.scatter(np.arange(len(conv1)), conv1)
+plt.xlabel("x")
+plt.ylabel("y")
+plt.title("(signal ⊗ k1) ⊗ k2")
+
+plt.subplot(2,2,2)
+plt.scatter(np.arange(len(conv2)), conv2)
+plt.xlabel("x")
+plt.ylabel("y")
+plt.title("(signal ⊗ k2) ⊗ k1")
+
+plt.subplot(2,2,3)
+plt.scatter(np.arange(len(conv3)), conv3)
+plt.xlabel("x")
+plt.ylabel("y")
+plt.title("signal ⊗ (k1 ⊗ k2)")
+
+plt.tight_layout()
+plt.show()
