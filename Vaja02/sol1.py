@@ -14,15 +14,17 @@ import matplotlib.pyplot as plt
 ### b)
 
 def simple_convolution(signal, kernel):
-    kernel = kernel[::-1]
+    # kernel = kernel[::-1] # imamo simetricno jedro
     N = (len(kernel) - 1) // 2
     res = []
     for i in range(N, len(signal) - N):
-        sum = 0
-        for j in range(len(kernel)):
-            sum += kernel[j] * signal[i-N + j]
+        # sum = 0
+        # for j in range(len(kernel)):
+        #     sum += kernel[j] * signal[i-N + j]
 
-        res.append(sum)
+        # res.append(sum)
+
+        res.append(np.dot(signal[i-N:i+N+1], kernel))
 
     return res
 
@@ -36,7 +38,8 @@ kernel = [0.0022181959, 0.0087731348, 0.027023158, 0.064825185,
 0.027023158, 0.0087731348, 0.0022181959]
 print(sum(kernel))
 
-print("Rezultat konvolucije:", simple_convolution(signal, kernel))
+conv1 = simple_convolution(signal, kernel)
+print("Rezultat konvolucije:", [round(x, 5) for x in np.array(conv1).tolist()])
 
 signal2 = [0, 1, 1, 1, 0, 0.7, 0.5, 0.2, 0, 0, 1, 0]
 kernel2 = [0.5, 1, 0.3]
@@ -50,12 +53,15 @@ kernel2 = [0.5, 1, 0.3]
 
 ### c)
 
+conv2 = np.convolve(signal, kernel, mode='valid')
+
 print()
-print("Rezultat konvolucije z numpy:", np.convolve(signal, kernel, mode='valid'))
+print("Rezultat konvolucije z numpy:", conv2)
+print("Ali sta rezultata enaka:", np.allclose(conv1, conv2))
 
 # V čem se ta funkcije razlikuje od vaše implementacije simple_convolution()?
 #     np.convolve obravnava še robne vrednosti z zero paddingom (okoli signala doda N ničel).
-#     S parametrom mode lahko nastavimo koliko robnih vrednosti obravnava.
+#     S parametrom `mode` lahko nastavimo, koliko robnih vrednosti obravnava.
 #     Parameter 'same' premika sredino jedro od prvega elementa signala do zadnjega.
 
 
@@ -210,3 +216,52 @@ def gauss_filter():
 
 gauss_filter()
 # Gaussov filter bolje filtrira Gaussov šum kot sol-poper šum.
+
+### i)
+
+k1 = [[0,0,0],
+      [0,2,0],
+      [0,0,0]]
+k2 = 1/9 * np.array([[1,1,1],[1,1,1],[1,1,1]])
+k = np.subtract(k1, k2)
+
+im = cv2.imread("slike/fox.jpg")
+im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+
+im_edge1 = cv2.filter2D(im, -1, k)
+im_edge2 = cv2.filter2D(im_edge1, -1, k)
+im_edge3 = cv2.filter2D(im_edge2, -1, k)
+
+plt.subplot(2,2,1)
+plt.imshow(im)
+plt.title("Originalna slika")
+
+plt.subplot(2,2,2)
+plt.imshow(im_edge1)
+plt.title("Ostrenje (1. prehod)")
+
+plt.subplot(2,2,3)
+plt.imshow(im_edge2)
+plt.title("Ostrenje (2. prehod)")
+
+plt.subplot(2,2,4)
+plt.imshow(im_edge3)
+plt.title("Ostrenje (3. prehod)")
+
+plt.tight_layout()
+plt.show()
+
+# Iz slike vzamemo detajle in jih bolj poudarimo
+# Gauss odstrani detajle, to odštejemo od originalne slike in dobimo sliko brez detajlov.
+
+### j)
+
+x = np.concatenate((np.zeros(14), np.ones(11), np.zeros(15)))
+xc = np.copy(x)
+xc[11] = 5
+xc[18] = 5
+
+# def median_filter():
+
+
+
