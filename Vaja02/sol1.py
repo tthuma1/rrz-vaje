@@ -261,7 +261,39 @@ xc = np.copy(x)
 xc[11] = 5
 xc[18] = 5
 
-# def median_filter():
+def simple_median(singal, N):
+    res = []
 
+    # velikost jedra = 2N + 1
+    for i in range(N,len(singal) - N):
+        res.append(np.median(signal[i-N:i+N+1]))
+    
+    return res
 
+res_median = simple_median(signal, 2)
+res_gauss = np.convolve(signal, simple_gauss(2), mode='valid')
+
+print()
+print("Rezultat medianinega filtra (N=2)", res_median)
+print("Rezultat Gaussovega filtra (sigma=2)", res_gauss)
+
+plt.subplot(2,2,1)
+plt.title("Originalen signal")
+plt.plot(signal)
+
+plt.subplot(2,2,2)
+plt.title("Medianin filter")
+plt.plot(res_median)
+
+plt.subplot(2,2,3)
+plt.title("Gaussov filter")
+plt.plot(res_gauss)
+
+plt.tight_layout()
+plt.show()
+
+# Kateri filter deluje bolje in zakaj?
+#     Bolje deluje medianin filter, ker popolnoma izloči intenziven točkast šum, medtem ko
+#     Gaussov filter samo zmanjša intenziteto šuma, ampak s tem tudi uniči okolico
+#     šumne točke.
 
