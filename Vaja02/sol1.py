@@ -294,6 +294,7 @@ plt.show()
 
 # Kateri filter deluje bolje in zakaj?
 #     Bolje deluje medianin filter, ker popolnoma izloči intenziven točkast šum, medtem ko
-#     Gaussov filter samo zmanjša intenziteto šuma, ampak s tem tudi uniči okolico
-#     šumne točke.
+#     Gaussov filter samo zmanjša intenziteto šuma, ampak s tem tudi uniči okolico šumne
+#     točke (šumno točko razmaže po okolici). Medianin filter učinkovito odstrani nenadne
+#     izjemne vrednosti (svetle in temne pike), ne da bi močno zabrisal prave robove.
 
