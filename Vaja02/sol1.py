@@ -261,11 +261,11 @@ xc = np.copy(x)
 xc[11] = 5
 xc[18] = 5
 
-def simple_median(singal, N):
+def simple_median(signal, N):
     res = []
 
     # velikost jedra = 2N + 1
-    for i in range(N,len(singal) - N):
+    for i in range(N,len(signal) - N):
         res.append(np.median(signal[i-N:i+N+1]))
     
     return res
@@ -297,4 +297,60 @@ plt.show()
 #     Gaussov filter samo zmanjša intenziteto šuma, ampak s tem tudi uniči okolico šumne
 #     točke (šumno točko razmaže po okolici). Medianin filter učinkovito odstrani nenadne
 #     izjemne vrednosti (svetle in temne pike), ne da bi močno zabrisal prave robove.
+
+### k)
+
+im_g_noise = cv2.imread('slike/lena_gauss.png')
+im_sp_noise = cv2.imread('slike/lena_sp.png')
+
+k_gauss = np.expand_dims(simple_gauss(2), axis=1)
+k_gaussT = k_gauss.T
+
+im_g_g_filtered = cv2.filter2D(cv2.filter2D(im_g_noise, -1, k_gauss), -1, k_gaussT)
+im_sp_g_filtered = cv2.filter2D(cv2.filter2D(im_sp_noise, -1, k_gauss), -1, k_gaussT)
+
+def simple_median_2D(im, N):
+    res = []
+
+    # velikost jedra = 2N + 1
+    for i in range(N, im.shape[0] - N):
+        row = []
+        for j in range(N, im.shape[1] - N):
+            row.append(np.median(im[i-N:i+N+1, j-N:j+N+1]))
+        res.append(row)
+    
+    return np.array(res).astype(np.uint8)
+
+
+im_g_med_filtered = cv2.medianBlur(im_g_noise, 3)
+im_sp_med_filtered = cv2.medianBlur(im_sp_noise, 3)
+# im_sp_med_filtered = simple_median_2D(im_sp_noise, 3)
+
+plt.subplot(2,3,1)
+plt.imshow(im_g_noise)
+plt.title("Gaussian noise")
+
+plt.subplot(2,3,2)
+plt.imshow(im_g_g_filtered)
+plt.title("Gauss filtered")
+
+plt.subplot(2,3,3)
+plt.imshow(im_g_med_filtered)
+plt.title("Median filtered")
+
+plt.subplot(2,3,4)
+plt.imshow(im_sp_noise)
+plt.title("Salt-and-pepper noise")
+
+plt.subplot(2,3,5)
+plt.imshow(im_sp_g_filtered)
+plt.title("Gauss filtered")
+
+plt.subplot(2,3,6)
+# plt.imshow(im_sp_med_filtered, vmin=0, vmax=255, cmap='gray')
+plt.imshow(im_sp_med_filtered)
+plt.title("Median filtered")
+
+plt.tight_layout()
+plt.show()
 
