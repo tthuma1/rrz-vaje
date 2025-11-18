@@ -75,9 +75,21 @@ def simple_gauss(sigma):
     
     return res
 
+k = simple_gauss(1)
 print()
-print("Gaussovo jedro (1):", simple_gauss(1))
-print("Vsota elementov v Gaussovem jedru (1):", np.sum(simple_gauss(1)))
+print("Gaussovo jedro (1):", k)
+print("Vsota elementov v Gaussovem jedru (1):", np.sum(k))
+
+plt.subplot(1,2,1)
+plt.plot(k)
+plt.title("Gauss (1)")
+
+plt.subplot(1,2,2)
+plt.plot(simple_gauss(2))
+plt.title("Gauss (2)")
+
+plt.tight_layout()
+plt.show()
 
 ### e)
 
