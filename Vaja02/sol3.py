@@ -151,13 +151,17 @@ im = cv2.imread('slike/coins.jpg')
 im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
 im_canny = cv2.Canny(im, threshold1=300, threshold2=450)
+# Preučite nabor njegovih vhodnih parametrov
+#    Lahko damo noter `edges` parameter, v katerega se bo shranil rezulat Canny operatorja
+#    `apertureSize` = veliksot kernela za Sobelov filter
+#    `L2gradient` = ali naj uporablja Evklidsko ali Mnahattansko razdaljo
 
 plt.subplot(1,2,1)
 plt.imshow(im)
 plt.title("Originalna slika")
 
 plt.subplot(1,2,2)
-plt.imshow(im_canny)
+plt.imshow(im_canny, cmap='gray')
 plt.title("Canny")
 
 plt.show()
