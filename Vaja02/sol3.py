@@ -255,5 +255,35 @@ for x, y in zip(xs_blur, ys_blur):
 plt.tight_layout()
 plt.show()
 
+img = cv2.imread("slike/crossword.jpg")
+img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+ 
+gray = np.float32(gray)
 
-### TODO pri c) in d) dodaj lastne slike (sudoku)
+dst = cv2.cornerHarris(gray, blockSize=9, ksize=3, k=0.05)
+
+mask = dst > 0.28 * dst.max()
+ys, xs = np.nonzero(mask)
+
+plt.subplot(2,2,1)
+plt.title('Original')
+plt.imshow(gray, cmap='gray')
+plt.axis('off')
+
+plt.subplot(2,2,2)
+plt.title('Vogali')
+plt.imshow(dst, cmap='gray')
+plt.axis('off')
+
+ax = plt.subplot(2,2,3)
+plt.title('Original + vogali')
+plt.imshow(img)
+plt.axis('off')
+
+for x, y in zip(xs, ys):
+    ax.add_patch(plt.Circle((x, y), 5, color='red', fill=True))
+
+plt.tight_layout()
+plt.show()
+
