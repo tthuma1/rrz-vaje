@@ -174,7 +174,10 @@ img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
 gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
  
 gray = np.float32(gray)
+gray_blur = cv2.GaussianBlur(gray, (7, 7), 0)
+
 dst = cv2.cornerHarris(gray, blockSize=7, ksize=5, k=0.05)
+dst_blur = cv2.cornerHarris(gray_blur, blockSize=3, ksize=3, k=0.01)
 # Preučite nabor njegovih vhodnih parametrov
 #    `blockSize` = Velikost soseske, nad katero se izračuna kovariančna matrika gradientov.
 #       velika vrednost => manj vogalov, ker bo gledal večji prostor okoli točke, da potrdi, ali je res vogal.
@@ -182,15 +185,12 @@ dst = cv2.cornerHarris(gray, blockSize=7, ksize=5, k=0.05)
 #       velika vrednost => manj vogalov, ker bo več glajenja.
 #    `k` = Harrisov prosto nastavljivi parameter občutljivosti.
 #       velika vrednost => manj vogalov, ker morajo biti dovolj očitni
- 
-#result is dilated for marking the corners, not important
-dst = cv2.dilate(dst, None)
- 
-# Threshold for an optimal value, it may vary depending on the image.
-# img[dst>0.01*dst.max()]=[255,0,0]
 
 mask = dst > 0.4 * dst.max()
 ys, xs = np.nonzero(mask)
+
+mask_blur = dst_blur > 0.27 * dst_blur.max()
+ys_blur, xs_blur = np.nonzero(mask_blur)
 
 plt.subplot(2,2,1)
 plt.title('Original')
@@ -207,8 +207,16 @@ plt.title('Original + vogali')
 plt.imshow(img)
 plt.axis('off')
 
+ax_blur = plt.subplot(2,2,4)
+plt.title('Blur + vogali')
+plt.imshow(img)
+plt.axis('off')
+
 for x, y in zip(xs, ys):
     ax.add_patch(plt.Circle((x, y), 5, color='red', fill=True))
+
+for x, y in zip(xs_blur, ys_blur):
+    ax_blur.add_patch(plt.Circle((x, y), 5, color='red', fill=True))
 
 plt.tight_layout()
 plt.show()
