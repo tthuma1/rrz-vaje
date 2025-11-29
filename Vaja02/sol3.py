@@ -220,10 +220,12 @@ dst_blur = cv2.cornerHarris(gray_blur, blockSize=3, ksize=3, k=0.01)
 #    `k` = Harrisov prosto nastavljivi parameter občutljivosti.
 #       velika vrednost => manj vogalov, ker morajo biti dovolj očitni
 
-mask = dst > 0.4 * dst.max()
+local_max = cv2.dilate(dst, cv2.getStructuringElement(cv2.MORPH_RECT, (5,5))) # local maximum suppression
+mask = (dst == local_max) & (dst > 0.4 * dst.max())
 ys, xs = np.nonzero(mask)
 
-mask_blur = dst_blur > 0.27 * dst_blur.max()
+local_max_blur = cv2.dilate(dst_blur, cv2.getStructuringElement(cv2.MORPH_RECT, (5,5))) # local maximum suppression
+mask_blur = (dst_blur == local_max_blur) & (dst_blur > 0.27 * dst_blur.max())
 ys_blur, xs_blur = np.nonzero(mask_blur)
 
 plt.subplot(2,2,1)
@@ -263,7 +265,8 @@ gray = np.float32(gray)
 
 dst = cv2.cornerHarris(gray, blockSize=9, ksize=3, k=0.05)
 
-mask = dst > 0.28 * dst.max()
+local_max = cv2.dilate(dst, cv2.getStructuringElement(cv2.MORPH_RECT, (5,5))) # local maximum suppression
+mask = (dst == local_max) & (dst > 0.28 * dst.max())
 ys, xs = np.nonzero(mask)
 
 plt.subplot(2,2,1)
