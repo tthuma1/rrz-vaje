@@ -28,7 +28,7 @@ def make_accumulator(path):
             if bin_rho[i] >= 0 and bin_rho[i] <= bins_rho - 1:
                 A[int(bin_rho[i]), i] += 1
 
-    ys, xs = np.nonzero(im_canny)
+    xs, ys = np.nonzero(im_canny)
     for (x, y) in zip(xs, ys):
         fill_accumulator(x, y)
     
