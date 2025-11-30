@@ -118,7 +118,6 @@ if circles is not None:
 if circles2 is not None:
     circles2 = np.around(circles2).astype(np.uint16)
     for x, y, r in circles2[0]:
-        print(r)
         cv2.circle(im, (x, y), r, (0, 255, 0), 2)
 
 plt.subplot(2,3,3)
@@ -134,3 +133,47 @@ plt.axis("off")
 plt.tight_layout()
 plt.show()
 
+### i)
+
+cap = cv2.VideoCapture(0)  # 0 = privzeta spletna kamera
+
+# While zanka za posodabljanje pridobljene slike do prekinitve
+while(True):
+    # Poskusajmo pridobiti trenutno sliko iz spletne kamere
+    ret, frame = cap.read()
+    
+    # Ce to ni mogoce (kamera izkljucena, itd.), koncajmo z izvajanjem funkcije
+    if ret == False:
+        break
+
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    gray_blur = cv2.GaussianBlur(gray,(3,3),0)
+    canny = cv2.Canny(gray_blur, threshold1=65, threshold2=130)
+    canny = np.repeat(np.expand_dims(canny, axis=2), 3, axis=2)
+
+    circles = cv2.HoughCircles(
+        gray_blur,
+        cv2.HOUGH_GRADIENT,
+        dp=1,
+        minDist=20,
+        param1=130,
+        param2=20,
+        minRadius=40,
+        maxRadius=50
+    )
+
+    if circles is not None:
+        circles = np.around(circles).astype(np.uint16)
+        for x, y, r in circles[0]:
+            cv2.circle(frame, (x, y), r, (0, 255, 0), 2)    
+
+    stack = np.vstack((frame, canny))
+    cv2.imshow('frame', stack)
+    
+    # Ob pritisku tipke 'q' prekini izvajanje funkcije
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+# Izklopi kamero in zapri okno
+cap.release()
+cv2.destroyAllWindows()
