@@ -290,3 +290,39 @@ for x, y in zip(xs, ys):
 plt.tight_layout()
 plt.show()
 
+cap = cv2.VideoCapture(0)  # 0 = privzeta spletna kamera
+
+# While zanka za posodabljanje pridobljene slike do prekinitve
+while(True):
+    # Poskusajmo pridobiti trenutno sliko iz spletne kamere
+    ret, frame = cap.read()
+    
+    # Ce to ni mogoce (kamera izkljucena, itd.), koncajmo z izvajanjem funkcije
+    if ret == False:
+        break
+
+    gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+    
+    gray = np.float32(gray)
+
+    dst = cv2.cornerHarris(gray, blockSize=5, ksize=3, k=0.02)
+
+    local_max = cv2.dilate(dst, cv2.getStructuringElement(cv2.MORPH_RECT, (5,5))) # local maximum suppression
+    mask = (dst == local_max) & (dst > 0.25 * dst.max())
+    ys, xs = np.nonzero(mask)
+
+    for x, y in zip(xs, ys):
+        cv2.circle(frame, (x, y), radius=5, color=(0, 255, 0), thickness=-1)
+
+    # Izrisimo rezultat
+    cv2.imshow('frame', frame)
+    
+    # Ob pritisku tipke 'q' prekini izvajanje funkcije
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+# Izklopi kamero in zapri okno
+cap.release()
+cv2.destroyAllWindows()
+
+plt.imshow(frame)
