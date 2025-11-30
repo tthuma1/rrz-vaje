@@ -100,8 +100,8 @@ canny = cv2.Canny(gray, threshold1=100, threshold2=200)
 lines = cv2.HoughLinesP(
     canny,
     rho=1,
-    theta=np.pi/360,
-    threshold=200,
+    theta=np.pi/180,
+    threshold=120,
     minLineLength=10,
     maxLineGap=50
 )
