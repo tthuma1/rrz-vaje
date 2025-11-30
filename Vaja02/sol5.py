@@ -80,6 +80,57 @@ plt.imshow(canny, cmap='gray')
 plt.title("Canny")
 plt.axis("off")
 
+
+im = cv2.imread("slike/coins_camera.jpg")
+im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+gray = cv2.cvtColor(im, cv2.COLOR_RGB2GRAY)
+
+gray_blur = cv2.GaussianBlur(gray,(5,5),0)
+canny = cv2.Canny(gray_blur, threshold1=120, threshold2=240)
+
+circles = cv2.HoughCircles(
+    gray_blur,
+    cv2.HOUGH_GRADIENT,
+    dp=1,
+    minDist=20,
+    param1=240,
+    param2=30,
+    minRadius=30,
+    maxRadius=50
+)
+
+circles2 = cv2.HoughCircles(
+    gray_blur,
+    cv2.HOUGH_GRADIENT,
+    dp=1,
+    minDist=20,
+    param1=240,
+    param2=30,
+    minRadius=190,
+    maxRadius=200
+)
+
+if circles is not None:
+    circles = np.around(circles).astype(np.uint16)
+    for x, y, r in circles[0]:
+        cv2.circle(im, (x, y), r, (0, 255, 0), 2)
+
+if circles2 is not None:
+    circles2 = np.around(circles2).astype(np.uint16)
+    for x, y, r in circles2[0]:
+        print(r)
+        cv2.circle(im, (x, y), r, (0, 255, 0), 2)
+
+plt.subplot(2,3,3)
+plt.imshow(im)
+plt.title("coins_camera.jpg")
+plt.axis("off")
+
+plt.subplot(2,3,6)
+plt.imshow(canny, cmap='gray')
+plt.title("Canny")
+plt.axis("off")
+
 plt.tight_layout()
 plt.show()
 
