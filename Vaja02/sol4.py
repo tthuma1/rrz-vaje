@@ -66,57 +66,96 @@ import cv2
 
 ### d)
 
-im = cv2.imread('slike/pier.jpg')
-im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
-gray = cv2.cvtColor(im, cv2.COLOR_RGB2GRAY)
-canny = cv2.Canny(gray, threshold1=100, threshold2=200)
+# im = cv2.imread('slike/pier.jpg')
+# im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+# gray = cv2.cvtColor(im, cv2.COLOR_RGB2GRAY)
+# canny = cv2.Canny(gray, threshold1=100, threshold2=200)
 
-lines = cv2.HoughLinesP(
-    canny,
-    rho=1,
-    theta=np.pi/360,
-    threshold=140,
-    minLineLength=30,
-    maxLineGap=50
-)
+# lines = cv2.HoughLinesP(
+#     canny,
+#     rho=1,
+#     theta=np.pi/360,
+#     threshold=140,
+#     minLineLength=30,
+#     maxLineGap=50
+# )
 
-for line in lines:
-    x1, y1, x2, y2 = line[0]
-    cv2.line(im, (x1, y1), (x2, y2), (0, 255, 0), 1)
+# for line in lines:
+#     x1, y1, x2, y2 = line[0]
+#     cv2.line(im, (x1, y1), (x2, y2), (0, 255, 0), 1)
 
-plt.subplot(2,2,1)
-plt.imshow(im)
-plt.title("pier.jpg")
+# plt.subplot(2,2,1)
+# plt.imshow(im)
+# plt.title("pier.jpg")
 
-plt.subplot(2,2,3)
-plt.imshow(canny, cmap='gray')
-plt.title("Canny")
+# plt.subplot(2,2,3)
+# plt.imshow(canny, cmap='gray')
+# plt.title("Canny")
 
-im = cv2.imread('slike/building.jpg')
-im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
-gray = cv2.cvtColor(im, cv2.COLOR_RGB2GRAY)
-canny = cv2.Canny(gray, threshold1=100, threshold2=200)
+# im = cv2.imread('slike/building.jpg')
+# im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+# gray = cv2.cvtColor(im, cv2.COLOR_RGB2GRAY)
+# canny = cv2.Canny(gray, threshold1=100, threshold2=200)
 
-lines = cv2.HoughLinesP(
-    canny,
-    rho=1,
-    theta=np.pi/180,
-    threshold=120,
-    minLineLength=10,
-    maxLineGap=50
-)
+# lines = cv2.HoughLinesP(
+#     canny,
+#     rho=1,
+#     theta=np.pi/180,
+#     threshold=120,
+#     minLineLength=10,
+#     maxLineGap=50
+# )
 
-for line in lines:
-    x1, y1, x2, y2 = line[0]
-    cv2.line(im, (x1, y1), (x2, y2), (0, 255, 0), 1)
+# for line in lines:
+#     x1, y1, x2, y2 = line[0]
+#     cv2.line(im, (x1, y1), (x2, y2), (0, 255, 0), 1)
 
-plt.subplot(2,2,2)
-plt.imshow(im)
-plt.title("building.jpg")
+# plt.subplot(2,2,2)
+# plt.imshow(im)
+# plt.title("building.jpg")
 
-plt.subplot(2,2,4)
-plt.imshow(canny, cmap='gray')
-plt.title("Canny")
+# plt.subplot(2,2,4)
+# plt.imshow(canny, cmap='gray')
+# plt.title("Canny")
 
-plt.tight_layout()
-plt.show()
+# plt.tight_layout()
+# plt.show()
+
+### e)
+
+cap = cv2.VideoCapture(0)  # 0 = privzeta spletna kamera
+
+# While zanka za posodabljanje pridobljene slike do prekinitve
+while(True):
+    # Poskusajmo pridobiti trenutno sliko iz spletne kamere
+    ret, frame = cap.read()
+    
+    # Ce to ni mogoce (kamera izkljucena, itd.), koncajmo z izvajanjem funkcije
+    if ret == False:
+        break
+
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    canny = cv2.Canny(gray, 100, 200)
+    lines = cv2.HoughLinesP(
+        canny,
+        rho=1,
+        theta=np.pi/180,
+        threshold=50,
+        minLineLength=10,
+        maxLineGap=50
+    )
+    
+    if lines is not None:
+        for line in lines:
+            x1, y1, x2, y2 = line[0]
+            cv2.line(frame, (x1, y1), (x2, y2), (0, 255, 0), 1)
+    
+    cv2.imshow('frame', frame)
+    
+    # Ob pritisku tipke 'q' prekini izvajanje funkcije
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+# Izklopi kamero in zapri okno
+cap.release()
+cv2.destroyAllWindows()
