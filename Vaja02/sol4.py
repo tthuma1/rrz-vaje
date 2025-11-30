@@ -82,7 +82,7 @@ lines = cv2.HoughLinesP(
 
 for line in lines:
     x1, y1, x2, y2 = line[0]
-    cv2.line(im, (x1, y1), (x2, y2), (255, 0, 0), 1)
+    cv2.line(im, (x1, y1), (x2, y2), (0, 255, 0), 1)
 
 plt.subplot(2,2,1)
 plt.imshow(im)
@@ -101,14 +101,14 @@ lines = cv2.HoughLinesP(
     canny,
     rho=1,
     theta=np.pi/180,
-    threshold=80,
-    minLineLength=50,
-    maxLineGap=10
+    threshold=200,
+    minLineLength=10,
+    maxLineGap=50
 )
 
 for line in lines:
     x1, y1, x2, y2 = line[0]
-    cv2.line(im, (x1, y1), (x2, y2), (255, 0, 0), 2)
+    cv2.line(im, (x1, y1), (x2, y2), (0, 255, 0), 1)
 
 plt.subplot(2,2,2)
 plt.imshow(im)
