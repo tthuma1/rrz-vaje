@@ -74,15 +74,15 @@ canny = cv2.Canny(gray, threshold1=100, threshold2=200)
 lines = cv2.HoughLinesP(
     canny,
     rho=1,
-    theta=np.pi/180,
-    threshold=150,
-    minLineLength=50,
-    maxLineGap=10
+    theta=np.pi/360,
+    threshold=140,
+    minLineLength=30,
+    maxLineGap=50
 )
 
 for line in lines:
     x1, y1, x2, y2 = line[0]
-    cv2.line(im, (x1, y1), (x2, y2), (255, 0, 0), 2)
+    cv2.line(im, (x1, y1), (x2, y2), (255, 0, 0), 1)
 
 plt.subplot(2,2,1)
 plt.imshow(im)
