@@ -12,3 +12,74 @@ import cv2
 #     določen radij. Torej za vsako točko na krožnici dobimo krožnico v parametričnem prostoru. Pravo središče
 #     krožnice je točka v parametričnem prostoru, skozi katero gre največ krožnic v parametričnem prostoru
 #     (točka, ki prejme največ glasov).
+
+### h)
+
+im = cv2.imread("slike/eclipse.jpg")
+im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+gray = cv2.cvtColor(im, cv2.COLOR_RGB2GRAY)
+
+canny = cv2.Canny(gray, threshold1=50, threshold2=25)
+
+circles = cv2.HoughCircles(
+    gray,
+    cv2.HOUGH_GRADIENT,
+    dp=1,
+    minDist=20,
+    param1=50,
+    param2=20,
+    minRadius=45,
+    maxRadius=50
+)
+
+if circles is not None:
+    circles = np.around(circles).astype(np.uint16)
+    for x, y, r in circles[0]:
+        cv2.circle(im, (x, y), r, (0, 255, 0), 2)
+
+plt.subplot(2,3,1)
+plt.imshow(im)
+plt.title("eclipse.jpg")
+plt.axis("off")
+
+plt.subplot(2,3,4)
+plt.imshow(canny, cmap='gray')
+plt.title("Canny")
+plt.axis("off")
+
+im = cv2.imread("slike/coins.jpg")
+im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+gray = cv2.cvtColor(im, cv2.COLOR_RGB2GRAY)
+
+gray_blur = cv2.GaussianBlur(gray,(5,5),0)
+canny = cv2.Canny(gray_blur, threshold1=150, threshold2=300)
+
+circles = cv2.HoughCircles(
+    gray_blur,
+    cv2.HOUGH_GRADIENT,
+    dp=1,
+    minDist=20,
+    param1=300,
+    param2=23,
+    minRadius=80,
+    maxRadius=90
+)
+
+if circles is not None:
+    circles = np.around(circles).astype(np.uint16)
+    for x, y, r in circles[0]:
+        cv2.circle(im, (x, y), r, (0, 255, 0), 2)
+
+plt.subplot(2,3,2)
+plt.imshow(im)
+plt.title("coins.jpg")
+plt.axis("off")
+
+plt.subplot(2,3,5)
+plt.imshow(canny, cmap='gray')
+plt.title("Canny")
+plt.axis("off")
+
+plt.tight_layout()
+plt.show()
+
