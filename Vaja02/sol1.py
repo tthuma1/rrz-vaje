@@ -95,18 +95,19 @@ plt.show()
 
 print()
 def draw_gauss(sigmas):
+    plt.figure()
+    plt.title("Gauss")
+    plt.xlabel("x")
+    plt.ylabel("y")
     for i, sigma in enumerate(sigmas):
         kernel = simple_gauss(sigma)
         x = np.linspace(-3*sigma, 3*sigma, 2 * math.ceil(3 * sigma) + 1)
 
         print("Vsota elementov v Gaussovem jedru (" + str(sigma) + "):", np.sum(kernel))
 
-        plt.subplot(2,3,i+1)
-        plt.plot(x, kernel)
-        plt.xlabel("x")
-        plt.ylabel("y")
-        plt.title("Gauss sigma = " + str(sigma))
+        plt.plot(x, kernel, label="sigma = " + str(sigma))
 
+    plt.legend()
     plt.tight_layout()
     plt.show()
 
