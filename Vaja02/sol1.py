@@ -36,10 +36,25 @@ signal = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 5.0, 0.0,
 kernel = [0.0022181959, 0.0087731348, 0.027023158, 0.064825185,
 0.12110939, 0.17621312, 0.19967563, 0.17621312, 0.12110939, 0.064825185,
 0.027023158, 0.0087731348, 0.0022181959]
-print(sum(kernel))
+print("Vsota elementov v jedru:", sum(kernel))
 
 conv1 = simple_convolution(signal, kernel)
 print("Rezultat konvolucije:", [round(x, 5) for x in np.array(conv1).tolist()])
+
+plt.figure(figsize=(9,5))
+
+plt.subplot(1,2,1)
+plt.plot(signal, label="signal")
+plt.plot(np.pad(conv1, len(kernel)//2), label="signal ⊗ jedro")
+plt.title("Signal")
+plt.legend()
+
+plt.subplot(1,2,2)
+plt.plot(kernel)
+plt.title("Jedro")
+
+plt.tight_layout()
+plt.show()
 
 signal2 = [0, 1, 1, 1, 0, 0.7, 0.5, 0.2, 0, 0, 1, 0]
 kernel2 = [0.5, 1, 0.3]
