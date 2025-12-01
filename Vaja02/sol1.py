@@ -95,16 +95,16 @@ print()
 print("Gaussovo jedro (1):", k)
 print("Vsota elementov v Gaussovem jedru (1):", np.sum(k))
 
-plt.subplot(1,2,1)
-plt.plot(k)
-plt.title("Gauss (1)")
+# plt.subplot(1,2,1)
+# plt.plot(k)
+# plt.title("Gauss (1)")
 
-plt.subplot(1,2,2)
-plt.plot(simple_gauss(2))
-plt.title("Gauss (2)")
+# plt.subplot(1,2,2)
+# plt.plot(simple_gauss(2))
+# plt.title("Gauss (2)")
 
-plt.tight_layout()
-plt.show()
+# plt.tight_layout()
+# plt.show()
 
 ### e)
 
@@ -280,7 +280,8 @@ plt.tight_layout()
 plt.show()
 
 # Iz slike vzamemo detajle in jih bolj poudarimo
-# Gauss odstrani detajle, to odštejemo od originalne slike in dobimo sliko brez detajlov.
+# Gauss odstrani detajle, to odštejemo od originalne slike in dobimo sliko s poudarjenimi detajli.
+# Odšteli smo tisto, kar niso detajli, torej je to isto kot če bi prišteli detajle.
 
 ### j)
 
@@ -305,18 +306,21 @@ print()
 print("Rezultat medianinega filtra (N=2)", res_median)
 print("Rezultat Gaussovega filtra (sigma=2)", res_gauss)
 
-plt.subplot(2,2,1)
-plt.title("Originalen signal")
+plt.figure(figsize=(9,5))
+plt.subplot(1,2,1)
 plt.plot(signal)
+plt.title("Signal")
 
-plt.subplot(2,2,2)
-plt.title("Medianin filter")
-plt.plot(res_median)
+plt.subplot(1,2,2)
+plt.title("Gauss in mediana")
 
-plt.subplot(2,2,3)
-plt.title("Gaussov filter")
-plt.plot(res_gauss)
+N = (2*3*2 + 1)//2
+N2 = (2*2 + 1) // 2
+plt.plot(signal, label="signal")
+plt.plot(np.pad(res_median, N2), label="mediana")
+plt.plot(np.pad(res_gauss, N), label="gauss")
 
+plt.legend()
 plt.tight_layout()
 plt.show()
 
@@ -382,3 +386,9 @@ plt.title("Median filtered")
 plt.tight_layout()
 plt.show()
 
+# Ocenite časovno kompleksnost Gaussovega in medianine filtra.
+#     Če za Gaussa uporabimo separabilno jedro, naredimo O(WH N) množenj (W=širina slike, H=višina slike, N=dolžina jedra).
+#     Za vsak piksel bomo porabili O(N) časa.
+#
+#     Pri mediani bomo imeli jedro velikosti N^2, za vsak piksel bomo torej morali sortirati N^2 števil,
+#     torej bomo za vsak piksel porabili O(N^2 log(N^2)) = O(N^2 log(N)) časa, skupaj torej O(WH N^2 log(N)).
