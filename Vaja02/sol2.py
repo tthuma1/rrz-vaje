@@ -47,7 +47,7 @@ def simple_gaussdx_2D(sigma, im):
     im_edges = cv2.filter2D(cv2.filter2D(im, -1, kx), -1, kx.T)
 
     plt.subplot(2,2,1)
-    plt.imshow(kx @ kx.T, cmap='gray')
+    plt.imshow(kx.T @ kx, cmap='gray')
     plt.title("Jedro odvoda Gaussa 2D (sigma=" + str(sigma) + ")")
 
     plt.subplot(2,2,2)
