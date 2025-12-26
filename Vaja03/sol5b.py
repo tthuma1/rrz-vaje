@@ -1,3 +1,4 @@
+
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -25,44 +26,17 @@ JOINT_NAMES = [
     'gripper',
 ]
 
-CUBE_SIZE = 0.05
-NUM_CUBES = 3
-
-PICK_XY = np.array([0.25, 0.25])
-PLACE_XY = np.array([0.1, 0.25])
-
-APPROACH_Z = 0.10     # safe height above cubes
-GRASP_OFFSET = 0.025 # half cube height
-
-def send_pose(chain, robot, pt, gripper):
-    ik = chain.inverse_kinematics(pt, optimizer='scalar')
-
-    ik[-1] = gripper  # 1=open, 0=closed
-
-    action = {
-        JOINT_NAMES[i] + '.pos': np.rad2deg(v)
-        for i, v in enumerate(ik[1:])
-    }
-    robot.send_action(action)
-    time.sleep(0.2)
-
-
-def move_linear(chain, robot, start, end, steps=20, gripper=1):
-    for t in np.linspace(0, 1, steps):
-        pt = (1 - t) * start + t * end
-        send_pose(chain, robot, pt, gripper)
-
 def main():
     URDF_PATH = 'so101_new_calib.urdf'
     my_chain = ikpy.chain.Chain.from_urdf_file(URDF_PATH)
     my_chain.active_links_mask[0]=False
 
     # Configure robot
-    port = "/dev/arm_f1"
+    port = "/dev/arm_f4"
     # robot_config = SO101FollowerConfig(port=port, id='arm_f1')
     calibration_dir='calibrations/'
-    robot_config = SO101FollowerConfig(port=port, id='arm_f1', calibration_dir=Path(calibration_dir))
-    
+    robot_config = SO101FollowerConfig(port=port, id='arm_f4', calibration_dir=Path(calibration_dir))
+
 
     robot = SO101Follower(robot_config)
     robot.connect()
@@ -75,45 +49,43 @@ def main():
         robot.bus.write("Goal_Velocity", j, v)
         robot.bus.write("Acceleration", j, a)
 
-    for i in range(NUM_CUBES):
 
-        pick_z = GRASP_OFFSET
-        place_z = GRASP_OFFSET + i * CUBE_SIZE
+    offset = np.array([0, 0, 0])
+    #pts = generate_rectangle(N=60)
+    #pts += offset
 
-        pick_above  = np.array([*PICK_XY, APPROACH_Z])
-        pick_grasp  = np.array([*PICK_XY, pick_z])
 
-        place_above = np.array([*PLACE_XY, APPROACH_Z])
-        place_grasp = np.array([*PLACE_XY, place_z])
 
-        # --- Move above pick ---
-        move_linear(my_chain, robot, pick_above, pick_above, gripper=1)
 
-        # --- Descend to pick ---
-        move_linear(my_chain, robot, pick_above, pick_grasp, gripper=1)
+    #width = 0.1
+    #height = 0.05
+    #target_position=np.array([0.2, 0.0, 0.05])
 
-        # --- Close gripper ---
-        send_pose(my_chain, robot, pick_grasp, gripper=0)
-        time.sleep(0.5)
+    #p1 = target_position
+    #p2 = target_position + [0, width, 0]
+    #p3 = target_position + [height, width, 0]
+    #p4 = target_position + [height, 0, 0]
 
-        # --- Lift cube ---
-        move_linear(my_chain, robot, pick_grasp, pick_above, gripper=0)
+    #pts = [p1,p2,p3,p4]
 
-        # --- Move above place ---
-        move_linear(my_chain, robot, pick_above, place_above, gripper=0)
 
-        # --- Descend to place ---
-        move_linear(my_chain, robot, place_above, place_grasp, gripper=0)
 
-        # --- Open gripper ---
-        send_pose(my_chain, robot, place_grasp, gripper=1)
-        time.sleep(0.5)
+    pts = generate_circle(N=60, radius = 0.04)
 
-        # --- Retreat ---
-        move_linear(my_chain, robot, place_grasp, place_above, gripper=1)
 
-        # --- Wait for next cube ---
-        time.sleep(3)
+    while True:
+        for pt in pts:
+
+            #target_orientation = np.eye(3)
+            #target_orientation[2,2]=-1
+            #ik = my_chain.inverse_kinematics(pt, target_orientation, 'all', optimizer='scalar')
+
+            ik = my_chain.inverse_kinematics(pt, optimizer='scalar')
+            action = {JOINT_NAMES[i]+'.pos': np.rad2deg(v) for i, v in enumerate(ik[1:])}
+
+            robot.send_action(action)
+            #time.sleep(0.01)
+            #time.sleep(2)
 
 if __name__=='__main__':
     main()

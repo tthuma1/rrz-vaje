@@ -64,6 +64,3 @@ plt.title('Warped')
 plt.tight_layout()
 plt.show()
 
-
-### c)
-

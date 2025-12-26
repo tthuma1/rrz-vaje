@@ -31,11 +31,11 @@ def main():
 	my_chain.active_links_mask[0]=False
 
 	# Configure robot
-	port = "/dev/arm_f1"
+	port = "/dev/arm_f4"
 	# robot_config = SO101FollowerConfig(port=port, id='arm_f1')
 	calibration_dir='calibrations/'
-	robot_config = SO101FollowerConfig(port=port, id='arm_f1', calibration_dir=Path(calibration_dir))
-	
+	robot_config = SO101FollowerConfig(port=port, id='arm_f4', calibration_dir=Path(calibration_dir))
+
 
 	robot = SO101Follower(robot_config)
 	robot.connect()

@@ -45,8 +45,9 @@ def get_workspace_corners(im):
 
     aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_APRILTAG_36h11)
     arucoParams = cv2.aruco.DetectorParameters()
+    detector = cv2.aruco.ArucoDetector(aruco_dict, arucoParams)
 
-    (corners, ids, rejected) = cv2.aruco.detectMarkers(im, aruco_dict, parameters=arucoParams)
+    (corners, ids, rejected) = detector.detectMarkers(im)
 
     if corners:
         for i, id in enumerate(ids.tolist()):

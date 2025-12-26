@@ -39,10 +39,11 @@ def IK_demo():
 	ax = fig.add_subplot(111, projection="3d")
 	fig.canvas.mpl_connect("key_press_event", on_press)
 
-	offset = np.array([0.2, 0, 0])
+	offset = np.array([0.1, 0, 0.5])
 
 	pts = generate_figure_8(N=N_pts).T
-	pts *= 0.2
+	#pts = generate_square(0.3, 20, np.array([0.3, 0.1, 0.6]))
+	pts *= 0.3
 	pts += offset
 
 	while not stopped:
@@ -52,8 +53,11 @@ def IK_demo():
 				break
 			ax.cla()
 
+			target_orientation = np.eye(3)
+			target_orientation[2,2]=-1
+			ik = my_chain.inverse_kinematics(target_position, target_orientation, 'all', optimizer='scalar')
 
-			ik = my_chain.inverse_kinematics(target_position, optimizer="scalar")  # ignores orientation
+			# ik = my_chain.inverse_kinematics(target_position, optimizer="scalar")  # ignores orientation
 			# ik = my_chain.inverse_kinematics(target_position, target_orientation, "all", optimizer='scalar') # includes orientation
 
 			ax.set_xlim(-radius, radius)

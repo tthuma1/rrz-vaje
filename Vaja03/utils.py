@@ -3,19 +3,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def show_coordinate_system(ax, M, scale=0.2):
-	
+
 	x_1 = np.array([M[0, 3], M[0, 3] + M[0, 0]*scale])
 	y_1 = np.array([M[1, 3], M[1, 3] + M[1, 0]*scale])
 	z_1 = np.array([M[2, 3], M[2, 3] + M[2, 0]*scale])
-	
+
 	x_2 = np.array([M[0, 3], M[0, 3] + M[0, 1]*scale])
 	y_2 = np.array([M[1, 3], M[1, 3] + M[1, 1]*scale])
 	z_2 = np.array([M[2, 3], M[2, 3] + M[2, 1]*scale])
-	
+
 	x_3 = np.array([M[0, 3], M[0, 3] + M[0, 2]*scale])
 	y_3 = np.array([M[1, 3], M[1, 3] + M[1, 2]*scale])
 	z_3 = np.array([M[2, 3], M[2, 3] + M[2, 2]*scale])
-	
+
 	ax.plot3D(x_1, y_1, z_1, 'red', linewidth=4)
 	ax.plot3D(x_2, y_2, z_2, 'green', linewidth=4)
 	ax.plot3D(x_3, y_3, z_3, 'blue', linewidth=4)
@@ -111,7 +111,7 @@ def generate_figure_8(N=100):
 
 	return np.vstack((z, res[:,0], res[:,1]))
 
-def generate_square(width = 0.1, N=100, target_position=[0.0, 0.0, 0.0]):
+def generate_square(width = 0.1, N=100, target_position=np.array([0.0, 0.0, 0.0])):
 
 	ls = np.linspace(0, width, N//4)
 
@@ -130,6 +130,43 @@ def generate_square(width = 0.1, N=100, target_position=[0.0, 0.0, 0.0]):
 		points.append(p3+[0,0,-x])
 	for x in np.linspace(0, width, N):
 		points.append(p4+[0,-x,0])
+
+	return np.array(points)
+
+def generate_rectangle(width = 0.1, height = 0.05, N=100, target_position=np.array([0.2, 0.0, 0.05])):
+	points = []
+
+	p1 = target_position
+	p2 = target_position + [0, width, 0]
+	p3 = target_position + [height, width, 0]
+	p4 = target_position + [height, 0, 0]
+
+	for x in np.linspace(0, width, N):
+		points.append(p1 + [0, x, 0])
+	for x in np.linspace(0, height, N):
+		points.append(p2 + [x, 0, 0])
+	for x in np.linspace(0, width, N):
+		points.append(p3 + [0, -x, 0])
+	for x in np.linspace(0, height, N):
+		points.append(p4 + [-x, 0, 0])
+
+	return np.array(points)
+
+def generate_circle(radius=0.05, N=100, target_position=np.array([0.25, 0.0, 0.05])):
+	points = []
+
+	target_position = np.asarray(target_position, dtype=float)
+
+	angles = np.linspace(0, 2 * np.pi, N, endpoint=False)
+
+	for theta in angles:
+		points.append(
+			target_position + np.array([
+				radius * np.cos(theta),
+				radius * np.sin(theta),
+				0.0
+			])
+		)
 
 	return np.array(points)
 
@@ -254,7 +291,7 @@ def Netwon_Raphson_demo():
 			plt.plot(0,0, 0, 'k*')
 			plt.plot(target[0],target[1], target[2], 'b*')
 			plt.plot(pts[:,0],pts[:,1], pts[:,2], 'm.')
-			plt.title(f'error: {error:.3f} in {iters} iterations')			
+			plt.title(f'error: {error:.3f} in {iters} iterations')
 
 			for i, T in enumerate(positions):
 				x,y,z = T[:3, -1]
