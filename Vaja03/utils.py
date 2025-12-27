@@ -175,7 +175,8 @@ def ccd_step(q, target, dh_params):
 
 	for j in range(n):
 		# Compute transform up to joint j
-		T = fk_dh(q, dh_params)[j]
+		ee_pos, Ts = end_effector_pos(q, dh_params)
+		T = Ts[j - 1] if j > 0 else np.eye(4)
 
 		# T = np.eye(4)
 		# for i in range(j):
@@ -187,7 +188,6 @@ def ccd_step(q, target, dh_params):
 		joint_pos = T[:3, 3]
 		z_axis = T[:3, 2]
 
-		ee_pos = fk_dh(q, dh_params)
 
 		if dh_params[j]["joint_type"] == "r":
 			v1 = ee_pos - joint_pos
@@ -215,20 +215,20 @@ def ik_ccd(
 	target,
 	q0,
 	dh_params,
-	max_iters=50,
+	max_iter=50,
 	tol=1e-4
 ):
 	q = np.array(q0, dtype=float)
 
-	for i in range(max_iters):
-		ee = end_effector_pos(q, dh_params)
+	for i in range(max_iter):
+		ee, _ = end_effector_pos(q, dh_params)
 		err_norm = np.linalg.norm(target - ee)
 		if np.linalg.norm(target - ee) < tol:
 			return q, True, i, err_norm
 			
 		q = ccd_step(q, target, dh_params)
 
-	return q, False, max_iters, err_norm
+	return q, False, max_iter, err_norm
 
 def ccd_step_jacobian(q, target, dh_params, step_scale):
 	n = len(q)
