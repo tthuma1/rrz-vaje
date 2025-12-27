@@ -170,6 +170,128 @@ def generate_circle(radius=0.05, N=100, target_position=np.array([0.25, 0.0, 0.0
 
 	return np.array(points)
 
+def ccd_step(q, target, dh_params):
+	n = len(q)
+
+	for j in range(n):
+		# Compute transform up to joint j
+		T = fk_dh(q, dh_params)[j]
+
+		# T = np.eye(4)
+		# for i in range(j):
+		# 	p = dh_params[i]
+		# 	theta = q[i] if p["joint_type"] == "r" else p.get("theta_offset", 0.0)
+		# 	d     = q[i] if p["joint_type"] == "p" else p.get("d", 0.0)
+		# 	T = T @ dh_transform(p["a"], p["alpha"], d, theta)
+
+		joint_pos = T[:3, 3]
+		z_axis = T[:3, 2]
+
+		ee_pos = fk_dh(q, dh_params)
+
+		if dh_params[j]["joint_type"] == "r":
+			v1 = ee_pos - joint_pos
+			v2 = target - joint_pos
+
+			v1 /= np.linalg.norm(v1)
+			v2 /= np.linalg.norm(v2)
+
+			cos_angle = np.clip(np.dot(v1, v2), -1.0, 1.0)
+			angle = np.arccos(cos_angle)
+
+			if np.dot(np.cross(v1, v2), z_axis) < 0:
+				angle = -angle
+
+			q[j] += angle
+
+		else:  # prismatic
+			direction = z_axis
+			delta = np.dot(target - ee_pos, direction)
+			q[j] += delta
+
+	return q
+
+def ik_ccd(
+	target,
+	q0,
+	dh_params,
+	max_iters=50,
+	tol=1e-4
+):
+	q = np.array(q0, dtype=float)
+
+	for i in range(max_iters):
+		ee = end_effector_pos(q, dh_params)
+		err_norm = np.linalg.norm(target - ee)
+		if np.linalg.norm(target - ee) < tol:
+			return q, True, i, err_norm
+			
+		q = ccd_step(q, target, dh_params)
+
+	return q, False, max_iters, err_norm
+
+def ccd_step_jacobian(q, target, dh_params, step_scale):
+	n = len(q)
+	# CCD loop
+	for j in range(n):
+		# Current EE position and error
+		p, _ = end_effector_pos(q, dh_params)
+		e = target - p
+
+		# Jacobian column for joint j
+		J = numeric_jacobian(q, dh_params)
+		Jj = J[:, j]
+
+		denom = np.dot(Jj, Jj)
+		if denom < 1e-10:
+			continue
+
+		dqj = step_scale * np.dot(Jj, e) / denom
+		q[j] += dqj
+	
+	return q
+
+def ik_ccd_jacobian(
+	pts,
+	q0,
+	dh_params,
+	tol=1e-4,
+	max_outer_iters=50,
+	step_scale=1.0
+):
+	"""
+	Cyclic Coordinate Descent IK using numeric Jacobian columns.
+
+	pts               : list/array of target positions (Nx3)
+	q0                : initial joint configuration
+	dh_params         : DH parameter list
+	tol               : position error tolerance
+	max_outer_iters   : CCD iterations per target
+	step_scale        : damping on joint updates
+
+	returns:
+		qs : list of joint configurations (one per target)
+	"""
+
+	q = np.array(q0, dtype=float)
+	qs = []
+
+	n = len(q)
+
+	for target in pts:
+		for _ in range(max_outer_iters):
+			p, _ = end_effector_pos(q, dh_params)
+			e = target - p
+
+			if np.linalg.norm(e) < tol:
+				break
+
+			q = ccd_step_jacobian(q, dh_params, step_scale)
+
+		qs.append(q.copy())
+
+	return qs
+
 def numeric_jacobian(q, dh_params, h=1e-6):
 	"""
 	Numerically estimate the Jacobian J = d p / d q for position only.
