@@ -176,14 +176,7 @@ def ccd_step(q, target, dh_params):
 	for j in range(n):
 		# Compute transform up to joint j
 		ee_pos, Ts = end_effector_pos(q, dh_params)
-		T = Ts[j - 1] if j > 0 else np.eye(4)
-
-		# T = np.eye(4)
-		# for i in range(j):
-		# 	p = dh_params[i]
-		# 	theta = q[i] if p["joint_type"] == "r" else p.get("theta_offset", 0.0)
-		# 	d     = q[i] if p["joint_type"] == "p" else p.get("d", 0.0)
-		# 	T = T @ dh_transform(p["a"], p["alpha"], d, theta)
+		T = np.eye(4) if j == 0 else Ts[j - 1]
 
 		joint_pos = T[:3, 3]
 		z_axis = T[:3, 2]
@@ -223,6 +216,7 @@ def ik_ccd(
 	for i in range(max_iter):
 		ee, _ = end_effector_pos(q, dh_params)
 		err_norm = np.linalg.norm(target - ee)
+
 		if np.linalg.norm(target - ee) < tol:
 			return q, True, i, err_norm
 			
@@ -235,8 +229,8 @@ def ccd_step_jacobian(q, target, dh_params, step_scale):
 	# CCD loop
 	for j in range(n):
 		# Current EE position and error
-		p, _ = end_effector_pos(q, dh_params)
-		e = target - p
+		ee, _ = end_effector_pos(q, dh_params)
+		e = target - ee
 
 		# Jacobian column for joint j
 		J = numeric_jacobian(q, dh_params)
@@ -252,11 +246,11 @@ def ccd_step_jacobian(q, target, dh_params, step_scale):
 	return q
 
 def ik_ccd_jacobian(
-	pts,
+	target,
 	q0,
 	dh_params,
 	tol=1e-4,
-	max_outer_iters=50,
+	max_iter=50,
 	step_scale=1.0
 ):
 	"""
@@ -266,7 +260,7 @@ def ik_ccd_jacobian(
 	q0                : initial joint configuration
 	dh_params         : DH parameter list
 	tol               : position error tolerance
-	max_outer_iters   : CCD iterations per target
+	max_iter   : CCD iterations per target
 	step_scale        : damping on joint updates
 
 	returns:
@@ -274,23 +268,17 @@ def ik_ccd_jacobian(
 	"""
 
 	q = np.array(q0, dtype=float)
-	qs = []
 
-	n = len(q)
+	for i in range(max_iter):
+		ee, _ = end_effector_pos(q, dh_params)
+		err_norm = np.linalg.norm(target - ee)
 
-	for target in pts:
-		for _ in range(max_outer_iters):
-			p, _ = end_effector_pos(q, dh_params)
-			e = target - p
+		if err_norm < tol:
+			return q, True, i, err_norm
 
-			if np.linalg.norm(e) < tol:
-				break
+		q = ccd_step_jacobian(q, target, dh_params, step_scale)
 
-			q = ccd_step_jacobian(q, dh_params, step_scale)
-
-		qs.append(q.copy())
-
-	return qs
+	return q, False, max_iter, err_norm
 
 def numeric_jacobian(q, dh_params, h=1e-6):
 	"""

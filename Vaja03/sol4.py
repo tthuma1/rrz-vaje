@@ -70,7 +70,7 @@ def sol4d():
 				break
 
 			# solve for position
-			q_sol, success, iters, error = ik_ccd(target, q0, dh_params, max_iter=max_iter)
+			q_sol, success, iters, error = ik_ccd_jacobian(target, q0, dh_params, max_iter=max_iter)
 			# get joint positions for the solution
 			_, positions = end_effector_pos(q_sol, dh_params)
 
@@ -98,6 +98,6 @@ def sol4d():
 			plt.draw(); plt.pause(0.01)
 
 if __name__ == "__main__":
-	sol4a()
+	# sol4a()
 	sol4d()
 
