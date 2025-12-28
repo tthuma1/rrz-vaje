@@ -70,7 +70,7 @@ def sol4d():
 				break
 
 			# solve for position
-			q_sol, success, iters, error = ik_ccd_jacobian(target, q0, dh_params, max_iter=max_iter)
+			q_sol, success, iters, error = ik_ccd(target, q0, dh_params, max_iter=max_iter)
 			# get joint positions for the solution
 			_, positions = end_effector_pos(q_sol, dh_params)
 
@@ -97,7 +97,31 @@ def sol4d():
 				plt.plot(x,y, z, 'r.')
 			plt.draw(); plt.pause(0.01)
 
+def sol4d_plot():
+	# Link lengths
+	L1 = 1  # base height
+	L2 = 1
+	L3 = 1
+	L4 = 1
+
+	dh_params = [
+		{"a": L1, "alpha": 0.0, "d": 0.0, "theta_offset": 0.0, "joint_type": "r"},
+		{"a": L2, "alpha": 0.0, "d": 0.0, "theta_offset": 0.0, "joint_type": "r"},
+		{"a": L3, "alpha": 0.0, "d": 0.0, "theta_offset": 0.0, "joint_type": "r"},
+		{"a": L4, "alpha": 0.0, "d": 0.0, "theta_offset": 0.0, "joint_type": "r"},
+	]
+
+	target = np.array([0.3, 0.1, 0.6])
+
+	q0 = [np.pi/2, np.pi/2, np.pi/2, np.pi/2]
+
+	target = [4, 0, 0]
+	max_iter = 20
+
+	q_sol, success, iters, error = ik_ccd(target, q0, dh_params, max_iter=max_iter, do_plot=True)
+
 if __name__ == "__main__":
 	# sol4a()
-	sol4d()
+	# sol4d()
+	sol4d_plot()
 

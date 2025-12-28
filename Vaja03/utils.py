@@ -209,20 +209,46 @@ def ik_ccd(
 	q0,
 	dh_params,
 	max_iter=50,
-	tol=1e-4
+	tol=1e-4,
+	do_plot=False
 ):
 	q = np.array(q0, dtype=float)
+	qs = [q]
 
 	for i in range(max_iter):
 		ee, _ = end_effector_pos(q, dh_params)
 		err_norm = np.linalg.norm(target - ee)
 
 		if np.linalg.norm(target - ee) < tol:
+			if do_plot:
+				plot_ccd(qs, dh_params, target)
 			return q, True, i, err_norm
 			
 		q = ccd_step(q, target, dh_params)
+		qs.append(q)
 
+	if do_plot:
+		plot_ccd(qs, dh_params, target)
 	return q, False, max_iter, err_norm
+
+def plot_ccd(qs, dh_params, target):
+	plt.clf()
+
+	xs = []
+	ys = []
+
+
+	for q in qs:
+		ee, _ = end_effector_pos(q, dh_params)
+		xs.append(ee[0])
+		ys.append(ee[1])
+
+	plt.subplot(1,2,1)
+	plt.plot(xs, ys)
+	plt.plot(target[0], target[1], 'r.')
+	plt.title("Pozicije robota")
+
+	plt.show()
 
 def ccd_step_jacobian(q, target, dh_params, step_scale):
 	n = len(q)
@@ -308,6 +334,7 @@ def ik_newton_dh(target_pos, q0, dh_params, tol=1e-6, max_iter=100, lr=0.5):
 	dh_params  : DH parameter list (see fk_dh)
 	tol        : convergence tolerance on position error norm
 	max_iter   : maximum iterations
+	lr         : learning rate or step size
 	"""
 	q = np.array(q0, dtype=float)
 
