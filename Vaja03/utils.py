@@ -170,17 +170,18 @@ def generate_circle(radius=0.05, N=100, target_position=np.array([0.25, 0.0, 0.0
 
 	return np.array(points)
 
-def ccd_step(q, target, dh_params):
+def ccd_step(q, target, dh_params, qs=[]):
 	n = len(q)
+	qs.append(q.copy())
 
-	for j in range(n):
+	# Update distal joints first!! Updating base first can cause issues, because the previous steps get kinda undone each iteration
+	for j in reversed(range(n)):
 		# Compute transform up to joint j
 		ee_pos, Ts = end_effector_pos(q, dh_params)
 		T = np.eye(4) if j == 0 else Ts[j - 1]
 
 		joint_pos = T[:3, 3]
 		z_axis = T[:3, 2]
-
 
 		if dh_params[j]["joint_type"] == "r":
 			v1 = ee_pos - joint_pos
@@ -196,11 +197,13 @@ def ccd_step(q, target, dh_params):
 				angle = -angle
 
 			q[j] += angle
+			qs.append(q.copy())
 
 		else:  # prismatic
 			direction = z_axis
 			delta = np.dot(target - ee_pos, direction)
 			q[j] += delta
+			qs.append(q.copy())
 
 	return q
 
@@ -213,37 +216,55 @@ def ik_ccd(
 	do_plot=False
 ):
 	q = np.array(q0, dtype=float)
-	qs = [q]
+	qs = []
+	errors = []
 
 	for i in range(max_iter):
 		ee, _ = end_effector_pos(q, dh_params)
 		err_norm = np.linalg.norm(target - ee)
 
-		if np.linalg.norm(target - ee) < tol:
+		qs.append(q.copy())
+		errors.append(err_norm)
+
+		if err_norm < tol:
 			if do_plot:
 				plot_ccd(qs, dh_params, target)
 			return q, True, i, err_norm
 			
-		q = ccd_step(q, target, dh_params)
-		qs.append(q)
+		q = ccd_step(q.copy(), target, dh_params, qs)
+
+	# qs.append(q.copy())
 
 	if do_plot:
 		plot_ccd(qs, dh_params, target)
 	return q, False, max_iter, err_norm
 
 def plot_ccd(qs, dh_params, target):
+	qs = np.array(qs)
 	plt.clf()
 
 	xs = []
 	ys = []
 
 
+	plt.subplot(1,3,1)
+	plt.xlabel("q1")
+	plt.ylabel("q2")
+
 	for q in qs:
 		ee, _ = end_effector_pos(q, dh_params)
+		print(q)
+		# plt.plot(q)
+		print(q)
+		# print(ee)
 		xs.append(ee[0])
 		ys.append(ee[1])
 
-	plt.subplot(1,2,1)
+	print(qs)
+	plt.plot(qs[:,0], qs[:,1], marker='o')
+
+	plt.subplot(1,2,2)
+	# plt.xlim([])
 	plt.plot(xs, ys)
 	plt.plot(target[0], target[1], 'r.')
 	plt.title("Pozicije robota")
