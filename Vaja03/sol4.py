@@ -117,7 +117,7 @@ def sol4d_plot():
 	target = np.array([1, 0.5, 0])
 	max_iter = 20
 
-	q_sol, success, iters, error = ik_ccd(target, q0, dh_params, max_iter=max_iter, do_plot=True)
+	q_sol, success, iters, error = ik_ccd(target, q0, dh_params, tol=1e-5, max_iter=max_iter, do_plot=True)
 
 if __name__ == "__main__":
 	# sol4a()

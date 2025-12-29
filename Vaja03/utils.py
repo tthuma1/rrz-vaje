@@ -245,30 +245,38 @@ def plot_ccd(qs, dh_params, target):
 
 	xs = []
 	ys = []
+	errors = []
 
-
-	plt.subplot(1,3,1)
-	plt.xlabel("q1")
-	plt.ylabel("q2")
 
 	for q in qs:
 		ee, _ = end_effector_pos(q, dh_params)
-		print(q)
-		# plt.plot(q)
-		print(q)
-		# print(ee)
+		err_norm = np.linalg.norm(target - ee)
+
+		errors.append(err_norm)
 		xs.append(ee[0])
 		ys.append(ee[1])
 
-	print(qs)
+	plt.subplot(1,3,1)
+	plt.title("Konfiguracije sklepov")
+	plt.xlabel("q1")
+	plt.ylabel("q2")
 	plt.plot(qs[:,0], qs[:,1], marker='o')
 
-	plt.subplot(1,2,2)
-	# plt.xlim([])
+	plt.subplot(1,3,2)
 	plt.plot(xs, ys)
 	plt.plot(target[0], target[1], 'r.')
+	plt.xlabel("x")
+	plt.ylabel("y")
 	plt.title("Pozicije robota")
 
+	plt.subplot(1,3,3)
+	plt.plot(errors[::len(q)]) # step is equal to number of joints so that we plot each iteration, not each update
+	plt.xlabel("Iteration")
+	plt.ylabel("Error")
+	plt.yscale('log')
+	plt.title("Napake")
+
+	plt.tight_layout()
 	plt.show()
 
 def ccd_step_jacobian(q, target, dh_params, step_scale):
