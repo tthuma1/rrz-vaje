@@ -26,6 +26,8 @@ def sliders():
 
 	initial_coeffs = np.hstack((0.0, initial_coeffs, 0.0))
 
+	p = np.array([0.1, -0.2, 0.05])
+
 	y = my_chain.forward_kinematics(initial_coeffs)
 
 	fig, ax = plot_utils.init_3d_figure()
@@ -36,6 +38,14 @@ def sliders():
 	ax.set_zlim(-radius, radius)
 
 	my_chain.plot(initial_coeffs, ax)
+
+	# Plot point p and vector from end effector to p
+	ee_pos = y[:3, 3]
+	vector = p - ee_pos
+	norm = np.linalg.norm(vector)
+	print(f"Oddaljenost od cilja: {norm}")
+	ax.scatter(p[0], p[1], p[2], color='red', s=50)
+	ax.plot([ee_pos[0], p[0]], [ee_pos[1], p[1]], [ee_pos[2], p[2]])
 
 	# Create main figure and axes
 	plt.subplots_adjust(bottom=0.45) # Make space at the bottom for sliders
@@ -90,6 +100,14 @@ def sliders():
 		ax.set_ylim(-radius, radius)
 		ax.set_zlim(-radius, radius)
 
+		# Plot point p and vector from end effector to p
+		ee_pos = my_chain.forward_kinematics(coeffs)[:3, 3]
+		vector = p - ee_pos
+		norm = np.linalg.norm(vector)
+		print(f"Oddaljenost od cilja: {norm}")
+		ax.scatter(p[0], p[1], p[2], color='red', s=50)
+		ax.plot([ee_pos[0], p[0]], [ee_pos[1], p[1]], [ee_pos[2], p[2]])
+
 		# Redraw the figure canvas
 		fig.canvas.draw_idle()
 
@@ -101,3 +119,7 @@ def sliders():
 
 if __name__ == "__main__":
 	sliders()
+
+# Poskusite definirati algoritem, ki opisuje vaš pristop k optimizaciji pozicije robotske roke (v psevdokodi).
+#    Najprej premakneš shoulder_pan, da robot gleda v pravo smer. Potem pokrčiš shouolder_lift in wrist_flex tako,
+#    da zadaneš ciljno točko. 
