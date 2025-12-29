@@ -391,7 +391,7 @@ def ik_newton_dh(target_pos, q0, dh_params, tol=1e-6, max_iter=100, lr=0.5):
 	# If we get here, no convergence
 	return q, False, max_iter, err_norm
 
-def Netwon_Raphson_demo():
+def Newton_Raphson_demo():
 	global stopped
 
 	# Link lengths
@@ -423,7 +423,8 @@ def Netwon_Raphson_demo():
 	target = np.array([0.3, 0.1, 0.6])
 
 	# Initial guess for joint angles (radians)
-	q0 = np.random.random(3)
+	# q0 = np.random.random(3)
+	q0 = np.array([0.97, 0.55, 0.07])
 
 	# set up figure
 	fig = plt.figure(figsize=(8,6))
@@ -446,6 +447,7 @@ def Netwon_Raphson_demo():
 
 			# solve for position
 			q_sol, success, iters, error = ik_newton_dh(target, q0, dh_params, max_iter=max_iter)
+			# q0 = q_sol
 			# get joint positions for the solution
 			_, positions = end_effector_pos(q_sol, dh_params)
 
@@ -473,4 +475,4 @@ def Netwon_Raphson_demo():
 			plt.draw(); plt.pause(0.01)
 
 if __name__=='__main__':
-	Netwon_Raphson_demo()
+	Newton_Raphson_demo()

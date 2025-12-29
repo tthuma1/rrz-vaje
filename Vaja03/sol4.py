@@ -14,7 +14,7 @@ from ikpy.utils import geometry
 from utils import *
 
 def sol4a():
-    Netwon_Raphson_demo()
+    Newton_Raphson_demo()
 
 def sol4d():
 	global stopped
@@ -120,7 +120,7 @@ def sol4d_plot():
 	q_sol, success, iters, error = ik_ccd(target, q0, dh_params, tol=1e-5, max_iter=max_iter, do_plot=True)
 
 if __name__ == "__main__":
-	# sol4a()
-	# sol4d()
-	sol4d_plot()
+	sol4a()
+	sol4d()
+	# sol4d_plot()
 
