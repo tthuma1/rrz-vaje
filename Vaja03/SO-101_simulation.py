@@ -48,7 +48,7 @@ def sliders():
 	ax.plot([ee_pos[0], p[0]], [ee_pos[1], p[1]], [ee_pos[2], p[2]])
 
 	# Create main figure and axes
-	plt.subplots_adjust(bottom=0.45) # Make space at the bottom for sliders
+	plt.subplots_adjust(bottom=0.3, top=0.93) # Make space at the bottom for sliders
 
 	# Plot the initial line
 	ax.set_xlabel("x")
