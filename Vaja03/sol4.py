@@ -12,9 +12,13 @@ import ikpy.chain
 import ikpy.utils.plot as plot_utils
 from ikpy.utils import geometry
 from utils import *
+from SO_101_simulation import sliders
 
 def sol4a():
-    Newton_Raphson_demo()
+	Newton_Raphson_demo()
+
+def sol4c():
+	sliders()
 
 def sol4d():
 	global stopped
@@ -98,8 +102,26 @@ def sol4d():
 			plt.draw(); plt.pause(0.01)
 
 def sol4d_plot():
+    ### first example
 	# Link lengths
-	L1 = 1  # base height
+	L1 = 1
+	L2 = 1
+
+	dh_params = [
+		{"a": L1, "alpha": 0.0, "d": 0.0, "theta_offset": 0.0, "joint_type": "r"},
+		{"a": L2, "alpha": 0.0, "d": 0.0, "theta_offset": 0.0, "joint_type": "r"},
+	]
+
+	# q0 = [np.pi/2, np.pi/2, np.pi/2, np.pi/2]
+	q0 = np.array([0,0])
+
+	target = np.array([1, 0.5, 0])
+
+	q_sol, success, iters, error = ik_ccd(target, q0, dh_params, tol=1e-5, max_iter=10, do_plot=True)
+
+    ### second example
+
+	L1 = 1
 	L2 = 1
 	L3 = 1
 	L4 = 1
@@ -107,20 +129,18 @@ def sol4d_plot():
 	dh_params = [
 		{"a": L1, "alpha": 0.0, "d": 0.0, "theta_offset": 0.0, "joint_type": "r"},
 		{"a": L2, "alpha": 0.0, "d": 0.0, "theta_offset": 0.0, "joint_type": "r"},
-		# {"a": L3, "alpha": 0.0, "d": 0.0, "theta_offset": 0.0, "joint_type": "r"},
-		# {"a": L4, "alpha": 0.0, "d": 0.0, "theta_offset": 0.0, "joint_type": "r"},
+		{"a": L3, "alpha": 0.0, "d": 0.0, "theta_offset": 0.0, "joint_type": "r"},
+		{"a": L4, "alpha": 0.0, "d": 0.0, "theta_offset": 0.0, "joint_type": "r"},
 	]
 
-	# q0 = [np.pi/2, np.pi/2, np.pi/2, np.pi/2]
-	q0 = np.array([0,0])
+	q0 = np.array([np.pi/2, np.pi/2, np.pi/2, np.pi/2])
+	target = np.array([4, 0, 0])
 
-	target = np.array([1, 0.5, 0])
-	max_iter = 20
-
-	q_sol, success, iters, error = ik_ccd(target, q0, dh_params, tol=1e-5, max_iter=max_iter, do_plot=True)
+	q_sol, success, iters, error = ik_ccd(target, q0, dh_params, tol=1e-5, max_iter=10, do_plot=True)
 
 if __name__ == "__main__":
-	sol4a()
-	sol4d()
-	# sol4d_plot()
+	# sol4a()
+	# sol4c()
+	# sol4d()
+	sol4d_plot()
 

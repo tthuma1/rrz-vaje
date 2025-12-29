@@ -172,7 +172,6 @@ def generate_circle(radius=0.05, N=100, target_position=np.array([0.25, 0.0, 0.0
 
 def ccd_step(q, target, dh_params, qs=[]):
 	n = len(q)
-	qs.append(q.copy())
 
 	# Update distal joints first!! Updating base first can cause issues, because the previous steps get kinda undone each iteration
 	for j in reversed(range(n)):
@@ -216,14 +215,13 @@ def ik_ccd(
 	do_plot=False
 ):
 	q = np.array(q0, dtype=float)
-	qs = []
+	qs = [q.copy()]
 	errors = []
 
 	for i in range(max_iter):
 		ee, _ = end_effector_pos(q, dh_params)
 		err_norm = np.linalg.norm(target - ee)
 
-		qs.append(q.copy())
 		errors.append(err_norm)
 
 		if err_norm < tol:
@@ -232,8 +230,6 @@ def ik_ccd(
 			return q, True, i, err_norm
 			
 		q = ccd_step(q.copy(), target, dh_params, qs)
-
-	# qs.append(q.copy())
 
 	if do_plot:
 		plot_ccd(qs, dh_params, target)
@@ -246,7 +242,6 @@ def plot_ccd(qs, dh_params, target):
 	xs = []
 	ys = []
 	errors = []
-
 
 	for q in qs:
 		ee, _ = end_effector_pos(q, dh_params)
@@ -270,10 +265,11 @@ def plot_ccd(qs, dh_params, target):
 	plt.title("Pozicije robota")
 
 	plt.subplot(1,3,3)
-	plt.plot(errors[::len(q)]) # step is equal to number of joints so that we plot each iteration, not each update
-	plt.xlabel("Iteration")
+	plt.plot(errors) # step is equal to number of joints so that we plot each iteration, not each update
+	plt.xlabel("Iteration (step no.)")
 	plt.ylabel("Error")
 	plt.yscale('log')
+	plt.ylim(bottom=1e-6)
 	plt.title("Napake")
 
 	plt.tight_layout()
