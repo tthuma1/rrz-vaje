@@ -32,13 +32,13 @@ PICK_XY = np.array([0.25, 0])
 PLACE_XY = np.array([0.2, 0.1])
 
 APPROACH_Z = 0.14 # safe height above cubes
-GRASP_OFFSET = 0.02 # half cube height
+GRASP_OFFSET = 0.02 # višina na kateri bomo zgrabili kocko
 
 def send_pose(chain, robot, pt, gripper):
-	target_orientation = np.eye(3)
-	target_orientation[2,2] = -1 # Z-os obrnemo dol z rotacijo okrog Y - pri tem se tudi X-os obrne
-	target_orientation[0,0] = -1
-	# target_orientation = geometry.rpy_matrix(0, np.deg2rad(180), 0)  # point down
+	# target_orientation = np.eye(3)
+	# target_orientation[2,2] = -1 # Z-os obrnemo dol z rotacijo okrog Y - pri tem se tudi X-os obrne
+	# target_orientation[0,0] = -1
+	target_orientation = geometry.rpy_matrix(0, np.deg2rad(180), 0)  # point down
 	ik = chain.inverse_kinematics(pt, target_orientation, 'all', optimizer='scalar')
  
 	# ik = chain.inverse_kinematics(pt, optimizer='scalar')
