@@ -38,7 +38,7 @@ robot_ws = np.array([
     [0,-0.25],
 ])
 
-def get_workspace_corners(im):
+def get_workspace_corners(im, draw_markers=False):
 
     # poišče oznake april in vrne njihove zunanje vogale
     # ustrezen vogal vsake oznake se določi preko preslikave v spremenljivki corner_mapping
@@ -59,6 +59,8 @@ def get_workspace_corners(im):
                     pt = (int(pt[0]), int(pt[1]))
                     corner_coordinates[id]=pt
 
+    if draw_markers:
+        cv2.aruco.drawDetectedMarkers(im, corners, ids)
     return np.array(list(corner_coordinates.values()))
 
 def calculate_homography_mapping(corners):
