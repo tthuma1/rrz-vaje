@@ -61,10 +61,13 @@ def IK_demo():
             ax.cla()
 
             target_orientation = np.eye(3)
-            target_orientation[2,2] = -1 # Z-os je obrnjena
-            ik = my_chain.inverse_kinematics(target_position, target_orientation, 'all')
+            target_orientation[2,2] = -1 # Z-os obrnemo dol z rotacijo okrog Y - pri tem se tudi X-os obrne
+            target_orientation[0,0] = -1
+            # target_orientation = geometry.rpy_matrix(0, np.deg2rad(180), 0)  # point down
+            ik = my_chain.inverse_kinematics(target_position, target_orientation, 'all', optimizer='scalar')
+            # ik = my_chain.inverse_kinematics(target_position, target_orientation, optimizer='scalar')
 
-            #ik = my_chain.inverse_kinematics(target_position, optimizer="scalar")  # ignores orientation
+            # ik = my_chain.inverse_kinematics(target_position, optimizer="scalar")  # ignores orientation
             # ik = my_chain.inverse_kinematics(target_position, target_orientation, "all", optimizer='scalar') # includes orientation
 
             ax.set_xlim(-radius, radius)

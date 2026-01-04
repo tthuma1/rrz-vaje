@@ -36,9 +36,12 @@ GRASP_OFFSET = 0.02 # half cube height
 
 def send_pose(chain, robot, pt, gripper):
 	target_orientation = np.eye(3)
-	target_orientation[2,2] = -1 # obrne Z-os
-	ik = chain.inverse_kinematics(pt, target_orientation, 'all')
-	# ik = chain.inverse_kinematics(pt)
+	target_orientation[2,2] = -1 # Z-os obrnemo dol z rotacijo okrog Y - pri tem se tudi X-os obrne
+	target_orientation[0,0] = -1
+	# target_orientation = geometry.rpy_matrix(0, np.deg2rad(180), 0)  # point down
+	ik = chain.inverse_kinematics(pt, target_orientation, 'all', optimizer='scalar')
+ 
+	# ik = chain.inverse_kinematics(pt, optimizer='scalar')
 
 	ik[-1] = gripper  # 1=open, 0=closed, 0.5 je na pol odprt
 
@@ -58,7 +61,6 @@ def main():
 	URDF_PATH = 'so101_new_calib.urdf'
 	my_chain = ikpy.chain.Chain.from_urdf_file(URDF_PATH)
 	my_chain.active_links_mask[0]=False
-	print(my_chain.inverse_kinematics([0,1,0]))
 
 	# Configure robot
 	port = "/dev/arm_f4"
