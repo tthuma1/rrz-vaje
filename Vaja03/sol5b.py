@@ -73,13 +73,12 @@ def main():
 
 
 
+
     # circle
     pts = generate_circle(N=60, radius = 0.04)
 
-
     while True:
         for pt in pts:
-
             #target_orientation = np.eye(3)
             #target_orientation[2,2] = -1 # obrne Z-os
             #ik = my_chain.inverse_kinematics(pt, target_orientation, 'all', optimizer='scalar')
