@@ -76,28 +76,27 @@ for i, (cx, cy) in enumerate(centroids):
     # Red dot
     cv2.circle(img, (cx, cy), 3, (255, 0, 0), -1)
 
-    gx = cx - x_min
-    gy = cy - y_min
-    W = x_max - x_min
-    H = y_max - y_min
-    X = H - gy          # up is +X
-    Y = (W/2) - gx      # left is +Y
+    pt = np.array([cx, cy, 1.0])
+    mapped = H2 @ pt
+    mapped /= mapped[2]   # normalize
 
-    # label = f"({cx}, {cy})"
-    label = f"({X:.1f}, {Y:.1f})"
+    Xr = mapped[0]   # robot X in meters
+    Yr = mapped[1]   # robot Y in meters
+
+    label = f"{Xr:.2f}, {Yr:.2f}"
 
     # Black border (thicker)
     cv2.putText(
         img, label, (cx + 5, cy - 5),
-        cv2.FONT_HERSHEY_SIMPLEX, 1.5,
+        cv2.FONT_HERSHEY_SIMPLEX, 1,
         (0, 0, 0), 6, cv2.LINE_AA
     )
 
     # White text (thin)
     cv2.putText(
         img, label, (cx + 5, cy - 5),
-        cv2.FONT_HERSHEY_SIMPLEX, 1.5,
-        (255, 255, 255), 3, cv2.LINE_AA
+        cv2.FONT_HERSHEY_SIMPLEX, 1,
+        (255, 255, 255), 2, cv2.LINE_AA
     )
 
 plt.imshow(img)
