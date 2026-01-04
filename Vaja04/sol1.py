@@ -8,14 +8,14 @@ ime_slike = 'capture_f1.jpg'
 im = cv2.imread(ime_slike)
 im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
-# print(im.shape)
+print(im.shape)
 
 # plt.clf()
 # plt.imshow(im)
 # plt.title('Originalna slika')
 
 # src_pts = np.float32(plt.ginput(4)).reshape(-1,1,2)
-# np.save('tocke', src_points)
+# np.save('tocke', src_pts)
 
 src_pts = np.load('tocke.npy')
 dst_pts = np.float32([[[0, 0]],
@@ -26,6 +26,7 @@ dst_pts = np.float32([[[0, 0]],
 H, mask = cv2.findHomography(src_pts, dst_pts)
 im2 = cv2.warpPerspective(im, H, (400, 270))
 
+plt.clf()
 plt.subplot(1,2,1)
 plt.imshow(im)
 plt.title('Original')
