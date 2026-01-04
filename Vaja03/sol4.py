@@ -14,7 +14,9 @@ from ikpy.utils import geometry
 from utils import *
 from SO_101_simulation import sliders
 
-def sol4a():
+def sol4b():
+	# Zakaj je inverzna kinematika v splošnem težko rešljiv problem?
+	#    Ker lahko eno točko dosežemo na več različnih načinov	
 	Newton_Raphson_demo()
 
 def sol4c():
@@ -216,7 +218,7 @@ def sol4d_stanford():
 			plt.draw(); plt.pause(0.01)
 
 if __name__ == "__main__":
-	sol4a()
+	sol4b()
 	sol4c()
 	sol4d()
 	sol4d_plot()

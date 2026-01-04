@@ -148,5 +148,5 @@ def sol3_stanford():
 
 
 if __name__=='__main__':
-	# sol3_antro()
+	sol3_antro()
 	sol3_stanford()

@@ -450,7 +450,7 @@ def Newton_Raphson_demo():
 
 			# solve for position
 			q_sol, success, iters, error = ik_newton_dh(target, q0, dh_params, max_iter=max_iter)
-			# q0 = q_sol
+			# q0 = q_sol # če izhajamo iz prejšnje rešitve, bo naslednja rešitev hitrejša in bolj točna, če so točke blizu skupaj
 			# get joint positions for the solution
 			_, positions = end_effector_pos(q_sol, dh_params)
 
