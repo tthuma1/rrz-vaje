@@ -189,9 +189,12 @@ def ccd_step(q, target, dh_params, qs=[]):
 			v1 /= np.linalg.norm(v1)
 			v2 /= np.linalg.norm(v2)
 
+            # a.b = |a|*|b|*cos(phi)
 			cos_angle = np.clip(np.dot(v1, v2), -1.0, 1.0)
 			angle = np.arccos(cos_angle)
 
+            # če sta v1 in v2 obrnjena v nasprotni smeri, torej je rezultat, ki ga je dal cos_angle v bistvu
+			# v negativni smeri
 			if np.dot(np.cross(v1, v2), z_axis) < 0:
 				angle = -angle
 
@@ -200,6 +203,10 @@ def ccd_step(q, target, dh_params, qs=[]):
 
 		else:  # prismatic
 			direction = z_axis
+            # pravokotna projekcija, ker je direction enotski vektor in ker rabimo samo dolžino
+			# pravokotne projekcije, ne rabimo nič drugega
+			# u.v = |u| * pr_u(v)
+            # u = direction
 			delta = np.dot(target - ee_pos, direction)
 			q[j] += delta
 			qs.append(q.copy())
