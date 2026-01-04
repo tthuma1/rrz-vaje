@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import workspace_utils
 import workspace_utils
+import matplotlib.patheffects as pe
+
+### a), b)
 
 ime_slike = 'capture_f1.jpg'
 im = cv2.imread(ime_slike)
@@ -64,42 +67,42 @@ plt.subplot(2, 3, 6)
 plt.imshow(labels)
 plt.title("Regije na sliki")
 
-plt.subplot(2, 3, 2)
-img = delovna_povrsina.copy()
+ax = plt.subplot(2, 3, 2)
 
 for i, (cx, cy) in enumerate(centroids):
     if i == 0:
-        continue  # skip background
+        continue
 
     cx, cy = int(cx), int(cy)
 
-    # Red dot
-    cv2.circle(img, (cx, cy), 3, (255, 0, 0), -1)
-
+    # --- Map centroid to robot coordinates using H2 ---
     pt = np.array([cx, cy, 1.0])
     mapped = H2 @ pt
-    mapped /= mapped[2]   # normalize
+    mapped /= mapped[2]
 
-    Xr = mapped[0]   # robot X in meters
-    Yr = mapped[1]   # robot Y in meters
+    Xr = mapped[0]   # meters
+    Yr = mapped[1]   # meters
 
-    label = f"{Xr:.2f}, {Yr:.2f}"
+    # --- Red dot ---
+    ax.plot(cx, cy, 'ro', markersize=1)
 
-    # Black border (thicker)
-    cv2.putText(
-        img, label, (cx + 5, cy - 5),
-        cv2.FONT_HERSHEY_SIMPLEX, 1,
-        (0, 0, 0), 6, cv2.LINE_AA
+    # --- Label using plt.text ---
+    ax.text(
+        cx + 10, cy - 10,
+        f"{Xr:.2f}, {Yr:.2f}",
+        color='white',
+        fontsize=8,
+        path_effects=[
+            pe.Stroke(linewidth=1, foreground='black'),
+            pe.Normal()
+        ]
     )
 
-    # White text (thin)
-    cv2.putText(
-        img, label, (cx + 5, cy - 5),
-        cv2.FONT_HERSHEY_SIMPLEX, 1,
-        (255, 255, 255), 2, cv2.LINE_AA
-    )
-
-plt.imshow(img)
 
 plt.tight_layout()
 plt.show()
+
+
+
+
+### c)
