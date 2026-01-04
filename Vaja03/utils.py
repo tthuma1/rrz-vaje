@@ -16,9 +16,9 @@ def show_coordinate_system(ax, M, scale=0.2):
 	y_3 = np.array([M[1, 3], M[1, 3] + M[1, 2]*scale])
 	z_3 = np.array([M[2, 3], M[2, 3] + M[2, 2]*scale])
 
-	ax.plot3D(x_1, y_1, z_1, 'red', linewidth=4)
-	ax.plot3D(x_2, y_2, z_2, 'green', linewidth=4)
-	ax.plot3D(x_3, y_3, z_3, 'blue', linewidth=4)
+	ax.plot3D(x_1, y_1, z_1, 'red', linewidth=4) # X
+	ax.plot3D(x_2, y_2, z_2, 'green', linewidth=4) # Y
+	ax.plot3D(x_3, y_3, z_3, 'blue', linewidth=4) # Z
 
 def dh_transform(a, alpha, d, theta):
 	"""
