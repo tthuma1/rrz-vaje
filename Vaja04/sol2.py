@@ -68,27 +68,39 @@ plt.subplot(2, 3, 2)
 img = delovna_povrsina.copy()
 
 for i, (cx, cy) in enumerate(centroids):
+    if i == 0:
+        continue  # skip background
+
     cx, cy = int(cx), int(cy)
 
-    # Skip label 0 (background)
-    if i == 0:
-        continue
+    # Red dot
+    cv2.circle(img, (cx, cy), 3, (255, 0, 0), -1)
 
-    # Draw small red dot
-    cv2.circle(img, (cx, cy), 3, (0, 0, 255), -1)
+    gx = cx - x_min
+    gy = cy - y_min
+    W = x_max - x_min
+    H = y_max - y_min
+    X = H - gy          # up is +X
+    Y = (W/2) - gx      # left is +Y
 
-    # Draw text label
+    # label = f"({cx}, {cy})"
+    label = f"({X:.1f}, {Y:.1f})"
+
+    # Black border (thicker)
     cv2.putText(
-        img,
-        f"{i}: ({cx}, {cy})",
-        (cx + 5, cy - 5),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        1,
-        (255, 255, 255),
-        1,
-        cv2.LINE_AA
+        img, label, (cx + 5, cy - 5),
+        cv2.FONT_HERSHEY_SIMPLEX, 1.5,
+        (0, 0, 0), 6, cv2.LINE_AA
     )
-plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+
+    # White text (thin)
+    cv2.putText(
+        img, label, (cx + 5, cy - 5),
+        cv2.FONT_HERSHEY_SIMPLEX, 1.5,
+        (255, 255, 255), 3, cv2.LINE_AA
+    )
+
+plt.imshow(img)
 
 plt.tight_layout()
 plt.show()
