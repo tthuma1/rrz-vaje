@@ -61,8 +61,8 @@ def IK_demo():
             ax.cla()
 
             target_orientation = np.eye(3)
-            target_orientation[2,2]=-1
-            ik = my_chain.inverse_kinematics(target_position, target_orientation, 'all', optimizer='scalar')
+            target_orientation[2,2] = -1 # Z-os je obrnjena
+            ik = my_chain.inverse_kinematics(target_position, target_orientation, 'all')
 
             #ik = my_chain.inverse_kinematics(target_position, optimizer="scalar")  # ignores orientation
             # ik = my_chain.inverse_kinematics(target_position, target_orientation, "all", optimizer='scalar') # includes orientation

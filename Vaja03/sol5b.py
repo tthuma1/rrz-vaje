@@ -51,12 +51,15 @@ def main():
 
 
     offset = np.array([0, 0, 0])
+
+    # rectangle 1
     #pts = generate_rectangle(N=60)
     #pts += offset
 
 
 
 
+    # rectangle 2
     #width = 0.1
     #height = 0.05
     #target_position=np.array([0.2, 0.0, 0.05])
@@ -70,6 +73,7 @@ def main():
 
 
 
+    # circle
     pts = generate_circle(N=60, radius = 0.04)
 
 
@@ -77,7 +81,7 @@ def main():
         for pt in pts:
 
             #target_orientation = np.eye(3)
-            #target_orientation[2,2]=-1
+            #target_orientation[2,2] = -1 # obrne Z-os
             #ik = my_chain.inverse_kinematics(pt, target_orientation, 'all', optimizer='scalar')
 
             ik = my_chain.inverse_kinematics(pt, optimizer='scalar')
