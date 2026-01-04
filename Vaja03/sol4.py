@@ -104,8 +104,7 @@ def sol4d():
 			plt.draw(); plt.pause(0.01)
 
 def sol4d_plot():
-    ### first example
-	# Link lengths
+    ### ----------- first example
 	L1 = 1
 	L2 = 1
 
@@ -114,15 +113,13 @@ def sol4d_plot():
 		{"a": L2, "alpha": 0.0, "d": 0.0, "theta_offset": 0.0, "joint_type": "r"},
 	]
 
-	# q0 = [np.pi/2, np.pi/2, np.pi/2, np.pi/2]
 	q0 = np.array([0,0])
 
 	target = np.array([1, 0.5, 0])
 
 	q_sol, success, iters, error = ik_ccd(target, q0, dh_params, tol=1e-5, max_iter=10, do_plot=True)
 
-    ### second example
-
+    ### ----------- second example
 	L1 = 1
 	L2 = 1
 	L3 = 1
@@ -178,6 +175,8 @@ def sol4d_stanford():
 	n_pts = 20
 	width = 0.5
 	pts = generate_square(width=width, N=n_pts, target_position=target)
+	# pts = generate_circle(radius=0.5, target_position=np.array([0,0,0]))
+	print(pts)
 	max_iter = 50
 
 	# infinite loop
