@@ -216,9 +216,9 @@ def sol4d_stanford():
 			plt.draw(); plt.pause(0.01)
 
 if __name__ == "__main__":
-	# sol4a()
-	# sol4c()
-	# sol4d()
-	# sol4d_plot()
+	sol4a()
+	sol4c()
+	sol4d()
+	sol4d_plot()
 	sol4d_stanford()
 
