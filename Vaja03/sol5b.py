@@ -50,10 +50,11 @@ def main():
 
 
 	# figure 8
-	# offset = np.array([0.2, 0, 0.2])
+    # N_pts = 30
+	# offset = np.array([0.3, 0, 0.2])
 	# pts = generate_figure_8(N=N_pts).T
-	# #pts = generate_square(0.3, 20, np.array([0.3, 0.1, 0.6]))
-	# pts *= 0.2
+	# #pts = generate_square(0.5, 20, np.array([0.3, 0.1, 0.6]))
+	# pts *= 0.1
 	# pts += offset
 
 
