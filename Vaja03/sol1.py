@@ -22,7 +22,14 @@
 # wrist_roll      |    137 |   2094 |   3970
 # gripper         |   2019 |   2057 |   3496
 
-#    V kodi so te vrednosti v radianih od ničelne pozicije.
+#    V kodi so te vrednosti v stopinjah od ničelne pozicije.
+#    shoulder_pan.pos: od -100 do 100 stopinj
+#    shoulder_lift.pos: od -99 do 98 stopinj
+#    elbow_flex.pos: od -80 do 100 stopinj
+#    wrist_flex.pos: od -100 do 97 stopinj
+#    wrist_roll.pos: od -100 do 100 stopinj
+#    gripper.pos: od 0.5 do 100 stopinj
+
 
 #    Pozicija 0 je, ko je roka obrnjena proti sredini, kaže gor in naprej (pod 90 stopinj; rama kaže gor, komolec kaže naprej,
 #    zapestje kaže naprej), konica pa je stisnjena.
