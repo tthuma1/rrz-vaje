@@ -4,19 +4,28 @@ import numpy as np
 import workspace_utils
 import matplotlib.patheffects as pe
 
-from lerobot.robots.so101_follower import SO101Follower, SO101FollowerConfig
+import warnings
+warnings.filterwarnings("ignore")
+
+import math, time
+np.set_printoptions(precision=2)
 from pathlib import Path
+
 import ikpy.chain
+from ikpy.inverse_kinematics import inverse_kinematic_optimization
+from ikpy.utils import geometry
+
+from lerobot.robots.so101_follower import SO101Follower, SO101FollowerConfig
 
 from utils import *
 
 JOINT_NAMES = [
-	'shoulder_pan',
-	'shoulder_lift',
-	'elbow_flex',
-	'wrist_flex',
-	'wrist_roll',
-	'gripper',
+    'shoulder_pan',
+    'shoulder_lift',
+    'elbow_flex',
+    'wrist_flex',
+    'wrist_roll',
+    'gripper',
 ]
 
 URDF_PATH = 'so101_new_calib.urdf'
@@ -83,13 +92,14 @@ for (uw, vw) in clicked_pts:
 
     Xr, Yr = mapped[0], mapped[1]
 
-    pt = np.array([Xr, Yr])
+    pt = np.array([Xr, Yr, 0.05])
 
     ik = my_chain.inverse_kinematics(pt, optimizer='scalar')
     action = {JOINT_NAMES[i]+'.pos': np.rad2deg(v) for i, v in enumerate(ik[1:])}
 
     robot.send_action(action)
 
+    time.sleep(1)
 
 
     # # Draw point on original image

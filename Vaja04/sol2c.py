@@ -3,7 +3,7 @@ import numpy as np
 
 # Nastavitve
 w, h = 1600, 1200
-camera_id = 2
+camera_id = 0
 output_name = "capture.jpg"
 
 # Naloži kalibracijske podatke
