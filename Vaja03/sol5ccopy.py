@@ -25,12 +25,11 @@ JOINT_NAMES = [
 	'gripper',
 ]
 
-CUBE_SIZE = 0.022
+CUBE_SIZE = 0.024
 NUM_CUBES = 4
 
 PICK_XY = np.array([0.25, 0])
-PLACE_XY = np.array([0.15, 0.1])
-PLACE_ABOVE_XY = np.array([0.2, 0.1])
+PLACE_XY = np.array([0.2, 0.1])
 
 APPROACH_Z = 0.14 # safe height above cubes
 GRASP_OFFSET = 0.02 # višina na kateri bomo zgrabili kocko
@@ -80,14 +79,14 @@ def main():
 		robot.bus.write("Goal_Velocity", j, v)
 		robot.bus.write("Acceleration", j, a)
 
-	for i in range(2,NUM_CUBES):
+	for i in range(NUM_CUBES):
 		pick_z = GRASP_OFFSET
 		place_z = GRASP_OFFSET + i * CUBE_SIZE
 
 		pick_above  = np.array([*PICK_XY, APPROACH_Z])
 		pick_grasp  = np.array([*PICK_XY, pick_z])
 
-		place_above = np.array([*PLACE_ABOVE_XY, APPROACH_Z])
+		place_above = np.array([*PLACE_XY, APPROACH_Z])
 		place_grasp = np.array([*PLACE_XY, place_z])
 
 		print(i)
@@ -96,12 +95,12 @@ def main():
 			place_above[1] += 0.005
 			place_above[2] += 0.005
 
-			#place_grasp[0] += 0.005
-			#place_grasp[1] += 0.005
-			place_grasp[2] -= 0.005
+			place_grasp[0] += 0.005
+			place_grasp[1] += 0.005
+			place_grasp[2] += 0.005
 
 		if i == 3:
-			place_grasp[2] += 0.022
+			place_grasp[2] += 0.01
 
 		# move above cube
 		move_linear(my_chain, robot, pick_above, pick_above, gripper=0.7, orientation='all')
@@ -121,29 +120,20 @@ def main():
 		# move above stack
 		move_linear(my_chain, robot, pick_above, place_above, gripper=0)
 
+		# descend to place on stack
+		move_linear(my_chain, robot, place_above, place_grasp, gripper=0, orientation='all')
+		time.sleep(1)
+
+		# open gripper
+		send_pose(my_chain, robot, place_grasp, gripper=0.7, orientation='all')
+		time.sleep(1)
+
 		if i != 3:
-			# descend to place on stack
-			move_linear(my_chain, robot, place_above, place_grasp, gripper=0, orientation='all')
-			time.sleep(1)
-
-			# open gripper
-			send_pose(my_chain, robot, place_grasp, gripper=0.7, orientation='all')
-			time.sleep(1)
-
 			# move above stack
 			move_linear(my_chain, robot, place_grasp, place_above, gripper=0.7, orientation='all')
 
 			# move above cube
 			move_linear(my_chain, robot, place_above, pick_above, gripper=0.5)
-		else: # na zadnji kocki si previsoko za orientation in konča se samo tako, da odpreš gripper
-			# descend to place on stack
-			move_linear(my_chain, robot, place_above, place_grasp, gripper=0, orientation='all')
-			time.sleep(1)
-
-			# open gripper
-			send_pose(my_chain, robot, place_grasp, gripper=0.7, orientation='all')
-			time.sleep(1)
-
 
 		# wait for next cube
 		time.sleep(2)
