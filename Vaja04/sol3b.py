@@ -15,35 +15,35 @@ from ikpy.utils import geometry
 from utils import *
 
 # --------------- begin robot config
-# JOINT_NAMES = [
-#     'shoulder_pan',
-#     'shoulder_lift',
-#     'elbow_flex',
-#     'wrist_flex',
-#     'wrist_roll',
-#     'gripper',
-# ]
+JOINT_NAMES = [
+    'shoulder_pan',
+    'shoulder_lift',
+    'elbow_flex',
+    'wrist_flex',
+    'wrist_roll',
+    'gripper',
+]
 
-# URDF_PATH = 'so101_new_calib.urdf'
-# my_chain = ikpy.chain.Chain.from_urdf_file(URDF_PATH)
-# my_chain.active_links_mask[0]=False
+URDF_PATH = 'so101_new_calib.urdf'
+my_chain = ikpy.chain.Chain.from_urdf_file(URDF_PATH)
+my_chain.active_links_mask[0]=False
 
-# # Configure robot
-# port = "/dev/arm_f4"
-# # robot_config = SO101FollowerConfig(port=port, id='arm_f1')
-# calibration_dir='calibrations/'
-# robot_config = SO101FollowerConfig(port=port, id='arm_f4', calibration_dir=Path(calibration_dir))
+# Configure robot
+port = "/dev/arm_f4"
+# robot_config = SO101FollowerConfig(port=port, id='arm_f1')
+calibration_dir='calibrations/'
+robot_config = SO101FollowerConfig(port=port, id='arm_f4', calibration_dir=Path(calibration_dir))
 
-# robot = SO101Follower(robot_config)
-# robot.connect()
-# robot.bus.disable_torque()
+robot = SO101Follower(robot_config)
+robot.connect()
+robot.bus.disable_torque()
 
-# # IMPORTANT for setting maximum velocity and acceleration
-# v = 500
-# a = 10
-# for j in JOINT_NAMES:
-#     robot.bus.write("Goal_Velocity", j, v)
-#     robot.bus.write("Acceleration", j, a)
+# IMPORTANT for setting maximum velocity and acceleration
+v = 500
+a = 10
+for j in JOINT_NAMES:
+    robot.bus.write("Goal_Velocity", j, v)
+    robot.bus.write("Acceleration", j, a)
 # --------------- end robot config
 
 last_point = None
@@ -113,12 +113,12 @@ while True:
 
     undistorted = cv2.undistort(frame, M, D)
     im = cv2.rotate(undistorted, cv2.ROTATE_180)
+    im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
     # če rabiš testing "brez kamere", odkomentiraj to
     # ------ start test
     # im_path = 'capture_f1.jpg'
     # im = cv2.imread(im_path)
-    # im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
     # ------ end test
 
     if H1 is None or H2 is None:
@@ -132,7 +132,7 @@ while True:
         robo_point /= robo_point[2]
 
         im_x, im_y = int(last_point[0]), int(last_point[1])
-        cv2.circle(im, (im_x, im_y), 5, (0, 0, 255), -1)
+        cv2.circle(im, (im_x, im_y), 5, (255, 0, 0), -1)
 
         text = f"{robo_point[0]:.2f}, {robo_point[1]:.2f}"
         # Draw black outline (thicker)
@@ -149,6 +149,7 @@ while True:
             (255, 255, 255), 1, cv2.LINE_AA
         )
 
+    im = cv2.cvtColor(im, cv2.COLOR_RGB2BGR)
     cv2.imshow('frame', im)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
