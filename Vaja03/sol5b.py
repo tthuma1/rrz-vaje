@@ -50,7 +50,7 @@ def main():
 
 
 	# figure 8
-    # N_pts = 30
+	# N_pts = 30
 	# offset = np.array([0.3, 0, 0.2])
 	# pts = generate_figure_8(N=N_pts).T
 	# #pts = generate_square(0.5, 20, np.array([0.3, 0.1, 0.6]))
@@ -85,6 +85,19 @@ def main():
 
 	# circle
 	pts = generate_circle(N=60, radius = 0.04)
+
+
+
+
+
+	# horizontal line
+	ys1 = np.linspace(-0.15, 0.15, 30)
+	ys2 = np.linspace(0.15, -0.15, 30)
+	ys = np.concatenate((ys1, ys2), axis=None)
+	pts = np.column_stack([np.zeros_like(ys), ys, np.zeros_like(ys)])
+	offset = np.array([0.4, 0, 0.08])
+
+	pts += offset
 
 
 	while True:

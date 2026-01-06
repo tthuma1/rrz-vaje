@@ -51,6 +51,15 @@ def IK_demo():
 	#pts *= 0.3
 	#pts *= 0.8
 
+
+
+	# horizontal line
+	ys1 = np.linspace(-0.15, 0.15, 30)
+	ys2 = np.linspace(0.15, -0.15, 30)
+	ys = np.concatenate((ys1, ys2), axis=None)
+	pts = np.column_stack([np.zeros_like(ys), ys, np.zeros_like(ys)])
+	offset = np.array([0.4, 0, 0.08])
+
 	pts += offset
 
 	while not stopped:
@@ -64,15 +73,25 @@ def IK_demo():
 			target_orientation[2,2] = -1 # Z-os obrnemo dol z rotacijo okrog Y - pri tem se tudi X-os obrne
 			target_orientation[0,0] = -1
 			# target_orientation = geometry.rpy_matrix(0, np.deg2rad(180), 0)  # point down
-			ik = my_chain.inverse_kinematics(target_position, target_orientation, 'all', optimizer='scalar') # includes orientation
+			# ik = my_chain.inverse_kinematics(target_position, target_orientation, 'all', optimizer='scalar') # includes orientation
 
-			# ik = my_chain.inverse_kinematics(target_position, optimizer="scalar")  # ignores orientation
+			ik = my_chain.inverse_kinematics(target_position, optimizer="scalar")  # ignores orientation
 
 			ax.set_xlim(-radius, radius)
 			ax.set_ylim(-radius, radius)
 			ax.set_zlim(-radius, radius)
 
 			my_chain.plot(ik, ax, target=target_position)
+
+			# izračunaj napako
+			# # Forward‑kinematics of the solved joint angles
+			# ee_pos = my_chain.forward_kinematics(ik)[:3, 3]
+			# # Cartesian error vector
+			# error = target_position - ee_pos
+			# # Norm if you want scalar error
+			# err_norm = np.linalg.norm(error)
+
+			# print(err_norm)
 
 			plt.plot(pts[:, 0], pts[:, 1], pts[:, 2], marker=".", alpha=0.5)
 
