@@ -10,47 +10,51 @@ import ikpy.chain
 from ikpy.inverse_kinematics import inverse_kinematic_optimization
 from ikpy.utils import geometry
 
-from lerobot.robots.so101_follower import SO101Follower, SO101FollowerConfig
+# from lerobot.robots.so101_follower import SO101Follower, SO101FollowerConfig
 
 from utils import *
 
 # --------------- begin robot config
-JOINT_NAMES = [
-    'shoulder_pan',
-    'shoulder_lift',
-    'elbow_flex',
-    'wrist_flex',
-    'wrist_roll',
-    'gripper',
-]
+# JOINT_NAMES = [
+#     'shoulder_pan',
+#     'shoulder_lift',
+#     'elbow_flex',
+#     'wrist_flex',
+#     'wrist_roll',
+#     'gripper',
+# ]
 
-URDF_PATH = 'so101_new_calib.urdf'
-my_chain = ikpy.chain.Chain.from_urdf_file(URDF_PATH)
-my_chain.active_links_mask[0]=False
+# URDF_PATH = 'so101_new_calib.urdf'
+# my_chain = ikpy.chain.Chain.from_urdf_file(URDF_PATH)
+# my_chain.active_links_mask[0]=False
 
-# Configure robot
-port = "/dev/arm_f4"
-# robot_config = SO101FollowerConfig(port=port, id='arm_f1')
-calibration_dir='calibrations/'
-robot_config = SO101FollowerConfig(port=port, id='arm_f4', calibration_dir=Path(calibration_dir))
+# # Configure robot
+# port = "/dev/arm_f4"
+# # robot_config = SO101FollowerConfig(port=port, id='arm_f1')
+# calibration_dir='calibrations/'
+# robot_config = SO101FollowerConfig(port=port, id='arm_f4', calibration_dir=Path(calibration_dir))
 
-robot = SO101Follower(robot_config)
-robot.connect()
-robot.bus.disable_torque()
+# robot = SO101Follower(robot_config)
+# robot.connect()
+# robot.bus.disable_torque()
 
-# IMPORTANT for setting maximum velocity and acceleration
-v = 500
-a = 10
-for j in JOINT_NAMES:
-    robot.bus.write("Goal_Velocity", j, v)
-    robot.bus.write("Acceleration", j, a)
+# # IMPORTANT for setting maximum velocity and acceleration
+# v = 500
+# a = 10
+# for j in JOINT_NAMES:
+#     robot.bus.write("Goal_Velocity", j, v)
+#     robot.bus.write("Acceleration", j, a)
 # --------------- end robot config
 
 last_point = None
 
 def save_homography(im):
-    corners = workspace_utils.get_workspace_corners(im, draw_markers=True)
-    H1, H2 = workspace_utils.calculate_homography_mapping(corners)
+    try:
+        corners = workspace_utils.get_workspace_corners(im, draw_markers=True)
+        H1, H2 = workspace_utils.calculate_homography_mapping(corners)
+    except Exception:
+        print("Can't read April tags.")
+        return None, None
 
     np.savez('homography_3b.npz', H1=H1, H2=H2)
     return H1, H2
@@ -120,9 +124,10 @@ while True:
     if H1 is None or H2 is None:
         H1, H2 = save_homography(im)
 
-    im = cv2.warpPerspective(im, H1, (1000, 1000))
+    if H1 is not None:
+        im = cv2.warpPerspective(im, H1, (1000, 1000))
     
-    if last_point is not None:
+    if last_point is not None and H2 is not None:
         robo_point = H2 @ last_point
         robo_point /= robo_point[2]
 
