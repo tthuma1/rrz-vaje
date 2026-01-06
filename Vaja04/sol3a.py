@@ -4,57 +4,63 @@ import numpy as np
 import workspace_utils
 import matplotlib.patheffects as pe
 
-# --- Load image ---
-ime_slike = 'capture_f1.jpg'
-im = cv2.imread(ime_slike)
+def save_homography(im):
+    corners = workspace_utils.get_workspace_corners(im, draw_markers=True)
+    H1, H2 = workspace_utils.calculate_homography_mapping(corners)
+
+    np.savez('homography.npz', H1=H1, H2=H2)
+
+def load_homography():
+    data = np.load('homography.npz')
+    return data['H1'], data['H2']
+
+im_path = 'capture_f1.jpg'
+im = cv2.imread(im_path)
 im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
-# --- Compute homographies ---
-corners = workspace_utils.get_workspace_corners(im, draw_markers=True)
-H1, H2 = workspace_utils.calculate_homography_mapping(corners)
+# save_homography(im)
+H1, H2 = load_homography()
 
-# --- Warp image to workspace (for clicking) ---
 delovna_povrsina = cv2.warpPerspective(im, H1, (1000, 1000))
 
-# --- Click points on the warped workspace ---
-fig, ax_click = plt.subplots(figsize=(6,6))
-ax_click.imshow(delovna_povrsina)
-ax_click.set_title("Click points on warped workspace")
-clicked_pts = plt.ginput(4, timeout=0)
-plt.close(fig)
+st_tock = 4
+plt.clf()
+plt.imshow(delovna_povrsina)
+plt.title(f"Označi {st_tock} točke")
+clicked_pts = np.array(plt.ginput(st_tock, timeout=0))
+plt.close()
 
-# --- Prepare inverse of H1 to map clicks back to original image ---
 H1_inv = np.linalg.inv(H1)
 
-# --- Plot ONLY the original image and mapped points ---
-fig, ax = plt.subplots(figsize=(8,8))
-ax.imshow(im)
-ax.set_title("Original image with robot coordinates")
+plt.clf()
+plt.imshow(im)
+plt.title("Originalna slika, koordinate KS robota")
 
-for (uw, vw) in clicked_pts:
+pts = np.vstack([clicked_pts[:,0], clicked_pts[:,1], np.ones(st_tock)])
 
-    # Step 1: warped → original image coordinates
-    pt_w = np.array([uw, vw, 1.0])
-    orig = H1_inv @ pt_w
-    orig /= orig[2]
+# s `H1_inv` gremo iz warped delovne površine => originalno sliko
+orig_pts = H1_inv @ pts
+orig_pts /= orig_pts[2]
 
-    u, v = orig[0], orig[1]
+# s `H2` gremo iz warped delovne površine v KS robota
+robot_pts = H2 @ pts
+robot_pts /= robot_pts[2]
 
-    # Step 2: original image → robot coordinates
-    # pt = np.array([u, v, 1.0])
-    mapped = H2 @ pt_w
-    mapped /= mapped[2]
+for i in range(orig_pts.shape[1]): # i gre po vsaki točki
+    orig_x = orig_pts[0][i]
+    orig_y = orig_pts[1][i]
 
-    Xr, Yr = mapped[0], mapped[1]
+    robot_x = robot_pts[0][i]
+    robot_y = robot_pts[1][i]
 
-    # Draw point on original image
-    ax.plot(u, v, 'yo', markersize=5)
+    # točke rišemo na originalni sliki
+    plt.plot(orig_x, orig_y, 'o', markersize=5)
 
-    # Label robot coordinates
-    ax.text(
-        u + 10, v - 10,
-        f"{Xr:.2f}, {Yr:.2f}",
-        color='yellow',
+    # izpiši točke v KS robota
+    plt.text(
+        orig_x + 10, orig_y - 10,
+        f"{robot_x:.2f}, {robot_y:.2f}",
+        color='white',
         fontsize=10,
         path_effects=[
             pe.Stroke(linewidth=1, foreground='black'),
