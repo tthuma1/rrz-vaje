@@ -112,9 +112,9 @@ while True:
 
     # če rabiš testing "brez kamere", odkomentiraj to
     # ------ start test
-    im_path = 'capture_f1.jpg'
-    im = cv2.imread(im_path)
-    im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+    # im_path = 'capture_f1.jpg'
+    # im = cv2.imread(im_path)
+    # im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
     # ------ end test
 
     if H1 is None or H2 is None:
