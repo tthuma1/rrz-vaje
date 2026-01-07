@@ -195,31 +195,35 @@ while True:
                 cx, cy = centroids[i]
                 cx, cy = int(cx), int(cy)
 
-                if cy < 0: # ignore blocks that are already on the right side
+                # ignore blocks that are already on the right side
+                # don't do anything if the robot is busy
+                if cy < 0 or robot_busy.is_set():
                     continue
         
-                robo_point = H2 @ np.array([cx, cy, 1.0])
-                robo_point /= robo_point[2]
-            
-                if not robot_busy.is_set():
-                    pick_queue.put(np.array([cx, cy, 1.0]))
+                pick_queue.put(np.array([cx, cy, 1.0]))
+                last_point = (cx, cy)
 
-                    cv2.circle(im, (cx, cy), 5, (255, 0, 0), -1)
+    if last_point is not None:
+        cx, cy = last_point
+        cv2.circle(im, (cx, cy), 5, (255, 0, 0), -1)
 
-                    text = f"{robo_point[0]:.2f}, {robo_point[1]:.2f}"
-                    # Draw black outline (thicker)
-                    cv2.putText(
-                        im, text, (cx + 10, cy - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                        (0, 0, 0), 3, cv2.LINE_AA
-                    )
+        robo_point = H2 @ np.array([cx, cy, 1.0])
+        robo_point /= robo_point[2]
 
-                    # Draw white text on top
-                    cv2.putText(
-                        im, text, (cx + 10, cy - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                        (255, 255, 255), 1, cv2.LINE_AA
-                    )
+        text = f"{robo_point[0]:.2f}, {robo_point[1]:.2f}"
+        # Draw black outline (thicker)
+        cv2.putText(
+            im, text, (cx + 10, cy - 10),
+            cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+            (0, 0, 0), 3, cv2.LINE_AA
+        )
+
+        # Draw white text on top
+        cv2.putText(
+            im, text, (cx + 10, cy - 10),
+            cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+            (255, 255, 255), 1, cv2.LINE_AA
+        )
 
     im = cv2.cvtColor(im, cv2.COLOR_RGB2BGR)
     cv2.imshow('frame', im)
