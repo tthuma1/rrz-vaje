@@ -83,6 +83,16 @@ def move_robot(pt, gripper, orientation_mode='all', timeout=3.0):
     robot.send_action(action)
     time.sleep(timeout)
 
+    return ik
+
+def slowly_open_gripper(ik):
+    for x in np.linspace(0, 0.3, 5):
+        ik[-1] = x
+        action = {JOINT_NAMES[i]+'.pos': np.rad2deg(v) for i, v in enumerate(ik[1:])}
+
+        robot.send_action(action)
+        time.sleep(0.2)
+
 
 PICK_Z = 0.03
 DROP_Z = 0.03
@@ -129,8 +139,8 @@ def pick_and_stack_block(pt_im):
 
     # place the block and open gripper
     place_pt = np.array([*DROP_OFFSET, stack_z])
-    move_robot(place_pt, 0.0)
-    move_robot(place_pt, 0.005, timeout=0.3) # open the gripper a little bit, before fully opening it
+    ik_placed = move_robot(place_pt, 0.0)
+    slowly_open_gripper(ik_placed) # slowly open gripper, so that cube doesn't suddenly fall out
     move_robot(place_pt, 0.7)
 
     # go a bit away from the tower
