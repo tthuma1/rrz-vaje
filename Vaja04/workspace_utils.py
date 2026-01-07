@@ -31,11 +31,12 @@ workspace = np.array([
 ])
 
 # mapiranje iz koordinat markerjev v koordinate robota, začnemo z levim spodnjim markerjem
+# po x se gleda bližji rob, zato sem vse zamaknil za 5 cm (velikost markerja)
 robot_ws = np.array([
-    [0,0.25],
+    [0.05,0.25],
     [0.488, 0.25],
     [0.488, -0.25],
-    [0,-0.25],
+    [0.05,-0.25],
 ])
 
 def get_workspace_corners(im, draw_markers=False):

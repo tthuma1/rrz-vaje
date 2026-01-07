@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import workspace_utils
 import time
+import warnings
+warnings.filterwarnings("ignore")
 
 np.set_printoptions(precision=2)
 from pathlib import Path
@@ -11,7 +13,7 @@ import ikpy.chain
 from ikpy.inverse_kinematics import inverse_kinematic_optimization
 from ikpy.utils import geometry
 
-# from lerobot.robots.so101_follower import SO101Follower, SO101FollowerConfig
+from lerobot.robots.so101_follower import SO101Follower, SO101FollowerConfig
 
 from utils import *
 import threading
@@ -42,7 +44,7 @@ robot_config = SO101FollowerConfig(port=port, id='arm_f4', calibration_dir=Path(
 
 robot = SO101Follower(robot_config)
 robot.connect()
-robot.bus.disable_torque()
+# robot.bus.disable_torque()
 
 # IMPORTANT for setting maximum velocity and acceleration
 v = 500
@@ -62,56 +64,68 @@ def save_homography(im):
         print("Can't read April tags.")
         return None, None
 
-    np.savez('homography_3b.npz', H1=H1, H2=H2)
+    np.savez('homography_3e.npz', H1=H1, H2=H2)
     return H1, H2
 
 def load_homography():
-    data = np.load('homography_3b.npz')
+    data = np.load('homography_3e.npz')
     return data['H1'], data['H2']
 
-def move_robot(pt, gripper):
+def move_robot(pt, gripper, orientation_mode='all', timeout=3):
     target_orientation = geometry.rpy_matrix(0, np.deg2rad(180), 0)  # point down
-    ik = my_chain.inverse_kinematics(pt, target_orientation, 'all', optimizer='scalar')
+    ik = my_chain.inverse_kinematics(pt, target_orientation, orientation_mode, optimizer='scalar')
     ik[-1] = gripper
     action = {JOINT_NAMES[i]+'.pos': np.rad2deg(v) for i, v in enumerate(ik[1:])}
 
     robot.send_action(action)
-    time.sleep(1)
+    time.sleep(timeout)
 
 
-PICK_Z = 0.02
-APPROACH_Z = 0.08
+PICK_Z = 0.03
+APPROACH_Z = 0.12
 def pick_and_move_block(pt_im):
     pt = H2 @ pt_im
     pt /= pt[2]
     # print(pt)
 
+    # centroid, ki ga vidimo ni čisto točno tam, kjer je kocka - to popravi
+    pick_x, pick_y = pt[0], pt[1]
+    if pt[1] > 0: # ko gremo na levo stran malo overshoota - moramo zmanjšati x in y
+        pick_x += -0.04
+        pick_y += -0.01
+    else: # ko gremo na desno stran malo overshoota - moramo povečati x in y
+        pick_x += -0.05
+        pick_y += 0.03
+
     # move robot above block
-    above_pick_pt = np.array([pt[0], pt[1], APPROACH_Z])
+    above_pick_pt = np.array([pick_x, pick_y, APPROACH_Z])
     move_robot(above_pick_pt, 0.7)
 
-    # pick dube
-    pick_pt = np.array([pt[0], pt[1], PICK_Z])
+    # pick cube
+    pick_pt = np.array([pick_x, pick_y, PICK_Z])
     move_robot(pick_pt, 0.7)
 
     # close gripper
     move_robot(pick_pt, 0)
 
     # go above picked cube
-    move_robot(above_pick_pt, 0)
+    move_robot(above_pick_pt, 0, timeout=1)
+    move_robot(above_pick_pt, 0, orientation_mode=None, timeout=1)
 
     # go above drop location
     # droppali bomo na istem x, samo y bomo obrnili - gremo iz ene strani na drugo
-    above_drop_pt = np.array([pt[0], -pt[1], APPROACH_Z])
-    move_robot(above_drop_pt, 0.0)
+    above_drop_pt = np.array([pick_x, -pick_y, APPROACH_Z])
+    move_robot(above_drop_pt, 0.0, orientation_mode=None)
+    move_robot(above_drop_pt, 0.0, timeout=1)
 
     # place the block and open gripper
-    place_pt = np.array([pt[0], -pt[1], PICK_Z])
-    move_robot(above_drop_pt, 0.0)
-    move_robot(above_drop_pt, 0.7)
+    place_pt = np.array([pick_x, -pick_y, PICK_Z])
+    move_robot(place_pt, 0.0)
+    move_robot(place_pt, 0.7)
 
     # go above drop location
-    move_robot(above_drop_pt, 0.7)
+    move_robot(above_drop_pt, 0.7, timeout=1)
+    move_robot(above_drop_pt, 0.7, orientation_mode=None, timeout=1)
 
 def robot_worker():
     while True:
@@ -121,23 +135,26 @@ def robot_worker():
             pick_and_move_block(pt_im)
         except Exception as e:
             print("Robot error:", e)
+        last_point = None
         robot_busy.clear()
         pick_queue.task_done()
 
 def process_blocks(mask, y_condition):
     global last_point
     num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
-        mask, connectivity=4
+        mask, connectivity=8
     )
 
     for i in range(1, num_labels):
         cx, cy = map(int, centroids[i])
+        robo_point = H2 @ np.array([cx, cy, 1.0])
+        robo_point /= robo_point[2]
 
         if robot_busy.is_set():
             continue
 
         # y_condition decides if block is already on target side
-        if not y_condition(cy):
+        if not y_condition(robo_point[1]):
             continue
 
         pick_queue.put(np.array([cx, cy, 1.0]))
@@ -146,11 +163,11 @@ def process_blocks(mask, y_condition):
 
 threading.Thread(target=robot_worker, daemon=True).start()
 
-# H1, H2 = load_homography()
-H1 = H2 = None
+H1, H2 = load_homography()
+# H1 = H2 = None
 
 w, h = 1600, 1200
-camera_id = 0
+camera_id = 1
 
 calib = np.load("wide_calibration_data.npz")
 M = calib["camera_matrix"]
@@ -164,13 +181,14 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT, h)
 cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
 
 # HSV blue limits
-blue_lower = np.array([90, 110, 30])
-blue_upper = np.array([140, 255, 255])
+blue_lower = np.array([80, 110, 60])
+
+blue_upper = np.array([150, 255, 255])
 
 # HSV red limits (two ranges)
-red_lower1 = np.array([0, 120, 70])
+red_lower1 = np.array([0, 220, 110])
 red_upper1 = np.array([10, 255, 255])
-red_lower2 = np.array([170, 120, 70])
+red_lower2 = np.array([170, 220, 110])
 red_upper2 = np.array([180, 255, 255])
 
 kernel = np.ones((11,11), np.uint8)
@@ -218,8 +236,12 @@ while True:
         red_mask2 = cv2.inRange(hsv, red_lower2, red_upper2)
         red_mask = cv2.bitwise_or(red_mask1, red_mask2)
 
-        blue_closed = cv2.morphologyEx(blue_mask, cv2.MORPH_CLOSE, kernel)
-        red_closed  = cv2.morphologyEx(red_mask,  cv2.MORPH_CLOSE, kernel)
+        red_opened  = cv2.morphologyEx(red_mask,  cv2.MORPH_OPEN, kernel)
+        blue_opened = cv2.morphologyEx(blue_mask, cv2.MORPH_OPEN, kernel)
+
+        blue_closed = cv2.morphologyEx(blue_opened, cv2.MORPH_CLOSE, kernel)
+        red_closed  = cv2.morphologyEx(red_opened,  cv2.MORPH_CLOSE, kernel)
+
 
         # Blue: left -> right (ignore already-right blocks)
         process_blocks(

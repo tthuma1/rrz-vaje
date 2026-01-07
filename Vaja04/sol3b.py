@@ -2,6 +2,8 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import workspace_utils
+import warnings
+warnings.filterwarnings("ignore")
 
 np.set_printoptions(precision=2)
 from pathlib import Path
@@ -10,7 +12,7 @@ import ikpy.chain
 from ikpy.inverse_kinematics import inverse_kinematic_optimization
 from ikpy.utils import geometry
 
-# from lerobot.robots.so101_follower import SO101Follower, SO101FollowerConfig
+from lerobot.robots.so101_follower import SO101Follower, SO101FollowerConfig
 
 from utils import *
 
@@ -36,7 +38,7 @@ robot_config = SO101FollowerConfig(port=port, id='arm_f4', calibration_dir=Path(
 
 robot = SO101Follower(robot_config)
 robot.connect()
-robot.bus.disable_torque()
+# robot.bus.disable_torque()
 
 # IMPORTANT for setting maximum velocity and acceleration
 v = 500
@@ -79,17 +81,26 @@ def send_robot_to_point(pt_im):
     # dobili smo x in y; z koordinato bomo hardcodali na 0.08
     pt[2] = 0.08
 
-    ik = my_chain.inverse_kinematics(pt, optimizer='scalar')
+    target_orientation = geometry.rpy_matrix(0, np.deg2rad(180), 0)  # point down
+    # target_orientation = np.eye(3)
+    # target_orientation[2, 2] = -1
+
+    # z = pt[2]
+    # alpha = np.clip((z - 0.04) / 0.04, 0.0, 1.0)
+    # down = geometry.rpy_matrix(0, np.deg2rad(180), 0)
+
+    ik = my_chain.inverse_kinematics(pt, target_orientation, 'all', optimizer='scalar')
+    # ik = my_chain.inverse_kinematics(pt, optimizer='scalar')
     action = {JOINT_NAMES[i]+'.pos': np.rad2deg(v) for i, v in enumerate(ik[1:])}
 
     robot.send_action(action)
 
 
-# H1, H2 = load_homography()
-H1 = H2 = None
+H1, H2 = load_homography()
+# H1 = H2 = None
 
 w, h = 1600, 1200
-camera_id = 0
+camera_id = 1
 
 calib = np.load("wide_calibration_data.npz")
 M = calib["camera_matrix"]

@@ -8,17 +8,17 @@ def save_homography(im):
     corners = workspace_utils.get_workspace_corners(im, draw_markers=True)
     H1, H2 = workspace_utils.calculate_homography_mapping(corners)
 
-    np.savez('homography.npz', H1=H1, H2=H2)
+    np.savez('homography3a.npz', H1=H1, H2=H2)
 
 def load_homography():
-    data = np.load('homography.npz')
+    data = np.load('homography3a.npz')
     return data['H1'], data['H2']
 
-im_path = 'capture_f1.jpg'
+im_path = 'moja_slika2.jpg'
 im = cv2.imread(im_path)
 im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
-# save_homography(im)
+save_homography(im)
 H1, H2 = load_homography()
 
 delovna_povrsina = cv2.warpPerspective(im, H1, (1000, 1000))

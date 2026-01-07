@@ -3,7 +3,7 @@ import numpy as np
 
 # Nastavitve
 w, h = 1600, 1200
-camera_id = 0
+camera_id = 1
 output_name = "capture.jpg"
 
 # Naloži kalibracijske podatke
@@ -16,6 +16,7 @@ cap = cv2.VideoCapture(camera_id)
 cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, w)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, h)
+cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
 
 if not cap.isOpened():
     raise RuntimeError("Kamera ni bila uspešno odprta.")
@@ -32,7 +33,7 @@ while True:
     rotated = cv2.rotate(undistorted, cv2.ROTATE_180)
 
     # Prikaz slike
-    cv2.imshow("image", rotated)
+    cv2.imshow("frame", rotated)
 
     key = cv2.waitKey(1) & 0xFF
 

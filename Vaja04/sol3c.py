@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import workspace_utils
 import time
+import warnings
+warnings.filterwarnings("ignore")
 
 np.set_printoptions(precision=2)
 from pathlib import Path
@@ -11,7 +13,7 @@ import ikpy.chain
 from ikpy.inverse_kinematics import inverse_kinematic_optimization
 from ikpy.utils import geometry
 
-# from lerobot.robots.so101_follower import SO101Follower, SO101FollowerConfig
+from lerobot.robots.so101_follower import SO101Follower, SO101FollowerConfig
 
 from utils import *
 
@@ -37,7 +39,7 @@ robot_config = SO101FollowerConfig(port=port, id='arm_f4', calibration_dir=Path(
 
 robot = SO101Follower(robot_config)
 robot.connect()
-robot.bus.disable_torque()
+# robot.bus.disable_torque()
 
 # IMPORTANT for setting maximum velocity and acceleration
 v = 500
@@ -57,11 +59,11 @@ def save_homography(im):
         print("Can't read April tags.")
         return None, None
 
-    np.savez('homography_3b.npz', H1=H1, H2=H2)
+    np.savez('homography_3c.npz', H1=H1, H2=H2)
     return H1, H2
 
 def load_homography():
-    data = np.load('homography_3b.npz')
+    data = np.load('homography_3c.npz')
     return data['H1'], data['H2']
 
 def send_robot_to_point(pt_im):
@@ -84,7 +86,7 @@ def send_robot_to_point(pt_im):
 H1 = H2 = None
 
 w, h = 1600, 1200
-camera_id = 0
+camera_id = 1
 
 calib = np.load("wide_calibration_data.npz")
 M = calib["camera_matrix"]
@@ -141,7 +143,7 @@ while True:
         closed = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
 
         num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
-            closed, connectivity=4
+            closed, connectivity=8
         )
 
         if num_labels > 1:
