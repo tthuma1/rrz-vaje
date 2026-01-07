@@ -124,6 +124,26 @@ def robot_worker():
         robot_busy.clear()
         pick_queue.task_done()
 
+def process_blocks(mask, y_condition):
+    global last_point
+    num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
+        mask, connectivity=4
+    )
+
+    for i in range(1, num_labels):
+        cx, cy = map(int, centroids[i])
+
+        if robot_busy.is_set():
+            continue
+
+        # y_condition decides if block is already on target side
+        if not y_condition(cy):
+            continue
+
+        pick_queue.put(np.array([cx, cy, 1.0]))
+        last_point = (cx, cy)
+
+
 threading.Thread(target=robot_worker, daemon=True).start()
 
 # H1, H2 = load_homography()
@@ -144,8 +164,15 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT, h)
 cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
 
 # HSV blue limits
-lower = np.array([90, 110, 30])
-upper = np.array([140, 255, 255])
+blue_lower = np.array([90, 110, 30])
+blue_upper = np.array([140, 255, 255])
+
+# HSV red limits (two ranges)
+red_lower1 = np.array([0, 120, 70])
+red_upper1 = np.array([10, 255, 255])
+red_lower2 = np.array([170, 120, 70])
+red_upper2 = np.array([180, 255, 255])
+
 kernel = np.ones((11,11), np.uint8)
 
 while True:
@@ -183,25 +210,28 @@ while True:
         im_grid = cv2.bitwise_and(im, im, mask=grid_mask)
 
         hsv = cv2.cvtColor(im_grid, cv2.COLOR_RGB2HSV)
-        mask = cv2.inRange(hsv, lower, upper)
-        closed = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+        # Blue mask
+        blue_mask = cv2.inRange(hsv, blue_lower, blue_upper)
 
-        num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
-            closed, connectivity=4
+        # Red mask (two ranges)
+        red_mask1 = cv2.inRange(hsv, red_lower1, red_upper1)
+        red_mask2 = cv2.inRange(hsv, red_lower2, red_upper2)
+        red_mask = cv2.bitwise_or(red_mask1, red_mask2)
+
+        blue_closed = cv2.morphologyEx(blue_mask, cv2.MORPH_CLOSE, kernel)
+        red_closed  = cv2.morphologyEx(red_mask,  cv2.MORPH_CLOSE, kernel)
+
+        # Blue: left -> right (ignore already-right blocks)
+        process_blocks(
+            blue_closed,
+            y_condition=lambda cy: cy > 0
         )
 
-        if num_labels > 1:
-            for i in range(1, num_labels):
-                cx, cy = centroids[i]
-                cx, cy = int(cx), int(cy)
-
-                # ignore blocks that are already on the right side
-                # don't do anything if the robot is busy
-                if cy < 0 or robot_busy.is_set():
-                    continue
-        
-                pick_queue.put(np.array([cx, cy, 1.0]))
-                last_point = (cx, cy)
+        # Red: right -> left (ignore already-left blocks)
+        process_blocks(
+            red_closed,
+            y_condition=lambda cy: cy < 0
+        )
 
     if last_point is not None:
         cx, cy = last_point
