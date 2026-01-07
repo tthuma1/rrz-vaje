@@ -55,6 +55,7 @@ for j in JOINT_NAMES:
 # --------------- end robot config
 
 last_point = None
+num_cubes_towered = 0
 
 def save_homography(im):
     try:
@@ -82,8 +83,10 @@ def move_robot(pt, gripper, orientation_mode='all', timeout=3):
 
 
 PICK_Z = 0.03
-APPROACH_Z = 0.12
-def pick_and_move_block(pt_im):
+APPROACH_Z = 0.15
+CUBE_SIZE = 0.02
+DROP_OFFSET = [0.20, 0.0]
+def pick_and_stack_block(pt_im):
     pt = H2 @ pt_im
     pt /= pt[2]
     # print(pt)
@@ -114,25 +117,29 @@ def pick_and_move_block(pt_im):
 
     # go above drop location
     # droppali bomo na istem x, samo y bomo obrnili - gremo iz ene strani na drugo
-    above_drop_pt = np.array([pick_x, -pick_y, APPROACH_Z])
+    above_drop_pt = np.array([*DROP_OFFSET, APPROACH_Z])
     move_robot(above_drop_pt, 0.0, orientation_mode=None)
     move_robot(above_drop_pt, 0.0, timeout=1)
 
+    stack_z = PICK_Z + CUBE_SIZE * num_cubes_towered
+
     # place the block and open gripper
-    place_pt = np.array([pick_x, -pick_y, PICK_Z])
+    place_pt = np.array([*DROP_OFFSET, stack_z])
     move_robot(place_pt, 0.0)
     move_robot(place_pt, 0.7)
 
-    # go above drop location
-    move_robot(above_drop_pt, 0.7, timeout=1)
-    move_robot(above_drop_pt, 0.7, orientation_mode=None, timeout=1)
+    # go a bit away from the tower
+    away_pt = [*place_pt]
+    away_pt[1] += 0.05
+    move_robot(away_pt, 0.7, timeout=1)
+    move_robot(away_pt, 0.7, orientation_mode=None, timeout=1)
 
 def robot_worker():
     while True:
         pt_im = pick_queue.get()   # blocks until task available
         robot_busy.set()
         try:
-            pick_and_move_block(pt_im)
+            pick_and_stack_block(pt_im)
         except Exception as e:
             print("Robot error:", e)
         last_point = None
@@ -141,6 +148,8 @@ def robot_worker():
 
 def process_blocks(mask, y_condition):
     global last_point
+    global num_cubes_towered
+
     num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
         mask, connectivity=8
     )
@@ -157,6 +166,7 @@ def process_blocks(mask, y_condition):
         if not y_condition(robo_point[1]):
             continue
 
+        num_cubes_towered += 1
         last_point = (cx, cy)
         pick_queue.put(np.array([cx, cy, 1.0]))
 
@@ -226,6 +236,10 @@ while True:
         grid_mask = np.zeros(im.shape[:2], dtype=np.uint8)
         grid_mask[y_min:y_max, x_min:x_max] = 255
         im_grid = cv2.bitwise_and(im, im, mask=grid_mask)
+
+        tower_mask = np.ones(im.shape[:2], dtype=np.uint8)
+        tower_mask[540:740, 470:550] = 0
+        im_grid = cv2.bitwise_and(im_grid, im_grid, mask=tower_mask)
 
         hsv = cv2.cvtColor(im_grid, cv2.COLOR_RGB2HSV)
         # Blue mask
