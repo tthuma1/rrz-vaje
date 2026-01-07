@@ -14,6 +14,11 @@ from ikpy.utils import geometry
 # from lerobot.robots.so101_follower import SO101Follower, SO101FollowerConfig
 
 from utils import *
+import threading
+import queue
+
+pick_queue = queue.Queue()
+robot_busy = threading.Event()
 
 # --------------- begin robot config
 JOINT_NAMES = [
@@ -108,6 +113,18 @@ def pick_and_move_block(pt_im):
     # go above drop location
     move_robot(above_drop_pt, 0.7)
 
+def robot_worker():
+    while True:
+        pt_im = pick_queue.get()   # blocks until task available
+        robot_busy.set()
+        try:
+            pick_and_move_block(pt_im)
+        except Exception as e:
+            print("Robot error:", e)
+        robot_busy.clear()
+        pick_queue.task_done()
+
+threading.Thread(target=robot_worker, daemon=True).start()
 
 # H1, H2 = load_homography()
 H1 = H2 = None
@@ -174,31 +191,35 @@ while True:
         )
 
         if num_labels > 1:
-            cx, cy = centroids[1]
-            cx, cy = int(cx), int(cy)
+            for i in range(1, num_labels):
+                cx, cy = centroids[i]
+                cx, cy = int(cx), int(cy)
+
+                if cy < 0: # ignore blocks that are already on the right side
+                    continue
         
-            robo_point = H2 @ np.array([cx, cy, 1.0])
-            robo_point /= robo_point[2]
+                robo_point = H2 @ np.array([cx, cy, 1.0])
+                robo_point /= robo_point[2]
             
-            if cy > 0: # move all blocks from left side to the right
-                pick_and_move_block(np.array([cx, cy, 1.0]))
+                if not robot_busy.is_set():
+                    pick_queue.put(np.array([cx, cy, 1.0]))
 
-                cv2.circle(im, (cx, cy), 5, (255, 0, 0), -1)
+                    cv2.circle(im, (cx, cy), 5, (255, 0, 0), -1)
 
-                text = f"{robo_point[0]:.2f}, {robo_point[1]:.2f}"
-                # Draw black outline (thicker)
-                cv2.putText(
-                    im, text, (cx + 10, cy - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                    (0, 0, 0), 3, cv2.LINE_AA
-                )
+                    text = f"{robo_point[0]:.2f}, {robo_point[1]:.2f}"
+                    # Draw black outline (thicker)
+                    cv2.putText(
+                        im, text, (cx + 10, cy - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                        (0, 0, 0), 3, cv2.LINE_AA
+                    )
 
-                # Draw white text on top
-                cv2.putText(
-                    im, text, (cx + 10, cy - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                    (255, 255, 255), 1, cv2.LINE_AA
-                )
+                    # Draw white text on top
+                    cv2.putText(
+                        im, text, (cx + 10, cy - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                        (255, 255, 255), 1, cv2.LINE_AA
+                    )
 
     im = cv2.cvtColor(im, cv2.COLOR_RGB2BGR)
     cv2.imshow('frame', im)
@@ -209,5 +230,4 @@ while True:
 
 cap.release()
 cv2.destroyAllWindows()
-
 
