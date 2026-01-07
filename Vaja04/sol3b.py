@@ -74,9 +74,9 @@ def click_event(event, x, y, flags, param):
 
 
 def send_robot_to_point(pt_im):
+    print(pt_im)
     pt = H2 @ pt_im
     pt /= pt[2]
-    print(pt)
 
     # dobili smo x in y; z koordinato bomo hardcodali na 0.08
     pt[2] = 0.08

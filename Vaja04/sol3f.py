@@ -72,8 +72,10 @@ def load_homography():
     data = np.load('homography_3e.npz')
     return data['H1'], data['H2']
 
-def move_robot(pt, gripper, orientation_mode='all', timeout=3):
+def move_robot(pt, gripper, orientation_mode='all', timeout=3.0):
     target_orientation = geometry.rpy_matrix(0, np.deg2rad(180), 0)  # point down
+    if num_cubes_towered == 4:
+        target_orientation = geometry.rpy_matrix(0, np.deg2rad(160), 0)  # don't point completely down for last cube
     ik = my_chain.inverse_kinematics(pt, target_orientation, orientation_mode, optimizer='scalar')
     ik[-1] = gripper
     action = {JOINT_NAMES[i]+'.pos': np.rad2deg(v) for i, v in enumerate(ik[1:])}
@@ -83,9 +85,10 @@ def move_robot(pt, gripper, orientation_mode='all', timeout=3):
 
 
 PICK_Z = 0.03
-APPROACH_Z = 0.15
-CUBE_SIZE = 0.02
-DROP_OFFSET = [0.20, 0.0]
+DROP_Z = 0.03
+APPROACH_Z = 0.13
+CUBE_SIZE = 0.020
+DROP_OFFSET = [0.22, 0.01]
 def pick_and_stack_block(pt_im):
     pt = H2 @ pt_im
     pt /= pt[2]
@@ -98,7 +101,7 @@ def pick_and_stack_block(pt_im):
         pick_y += -0.01
     else: # ko gremo na desno stran malo overshoota - moramo povečati x in y
         pick_x += -0.05
-        pick_y += 0.03
+        pick_y += 0.025
 
     # move robot above block
     above_pick_pt = np.array([pick_x, pick_y, APPROACH_Z])
@@ -118,26 +121,32 @@ def pick_and_stack_block(pt_im):
     # go above drop location
     # droppali bomo na istem x, samo y bomo obrnili - gremo iz ene strani na drugo
     above_drop_pt = np.array([*DROP_OFFSET, APPROACH_Z])
+    above_drop_pt[0] += 0.03 # preprečimo, da se robot prevrne nazaj
     move_robot(above_drop_pt, 0.0, orientation_mode=None)
     move_robot(above_drop_pt, 0.0, timeout=1)
 
-    stack_z = PICK_Z + CUBE_SIZE * num_cubes_towered
+    stack_z = DROP_Z + CUBE_SIZE * (num_cubes_towered - 1)
 
     # place the block and open gripper
     place_pt = np.array([*DROP_OFFSET, stack_z])
     move_robot(place_pt, 0.0)
+    move_robot(place_pt, 0.005, timeout=0.3) # open the gripper a little bit, before fully opening it
     move_robot(place_pt, 0.7)
 
     # go a bit away from the tower
     away_pt = [*place_pt]
-    away_pt[1] += 0.05
+    away_pt[1] += 0.02
     move_robot(away_pt, 0.7, timeout=1)
     move_robot(away_pt, 0.7, orientation_mode=None, timeout=1)
+
+    # go above tower
+    away_pt[2] = APPROACH_Z
+    move_robot(away_pt, 0.7, timeout=1)
+
 
 def robot_worker():
     while True:
         pt_im = pick_queue.get()   # blocks until task available
-        robot_busy.set()
         try:
             pick_and_stack_block(pt_im)
         except Exception as e:
@@ -146,7 +155,7 @@ def robot_worker():
         robot_busy.clear()
         pick_queue.task_done()
 
-def process_blocks(mask, y_condition):
+def process_blocks(mask):
     global last_point
     global num_cubes_towered
 
@@ -162,10 +171,7 @@ def process_blocks(mask, y_condition):
         if robot_busy.is_set():
             continue
 
-        # y_condition decides if block is already on target side
-        if not y_condition(robo_point[1]):
-            continue
-
+        robot_busy.set()
         num_cubes_towered += 1
         last_point = (cx, cy)
         pick_queue.put(np.array([cx, cy, 1.0]))
@@ -238,7 +244,7 @@ while True:
         im_grid = cv2.bitwise_and(im, im, mask=grid_mask)
 
         tower_mask = np.ones(im.shape[:2], dtype=np.uint8)
-        tower_mask[540:740, 470:550] = 0
+        tower_mask[400:740, 470:580] = 0
         im_grid = cv2.bitwise_and(im_grid, im_grid, mask=tower_mask)
 
         hsv = cv2.cvtColor(im_grid, cv2.COLOR_RGB2HSV)
@@ -260,13 +266,11 @@ while True:
         # Blue: left -> right (ignore already-right blocks)
         process_blocks(
             blue_closed,
-            y_condition=lambda cy: cy > 0
         )
 
         # Red: right -> left (ignore already-left blocks)
         process_blocks(
             red_closed,
-            y_condition=lambda cy: cy < 0
         )
 
     if last_point is not None:
@@ -292,7 +296,7 @@ while True:
         )
 
     im = cv2.cvtColor(im, cv2.COLOR_RGB2BGR)
-    cv2.imshow('frame', im)
+    cv2.imshow('frame', im_grid)
     time.sleep(0.01)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
