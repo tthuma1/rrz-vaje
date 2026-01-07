@@ -1,21 +1,21 @@
 import cv2
-import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.patheffects as pe
+import numpy as np
 import workspace_utils
-import time, warnings
+import time
+
+np.set_printoptions(precision=2)
 from pathlib import Path
 
-warnings.filterwarnings("ignore")
-np.set_printoptions(precision=2)
-
 import ikpy.chain
-from lerobot.robots.so101_follower import SO101Follower, SO101FollowerConfig
+from ikpy.inverse_kinematics import inverse_kinematic_optimization
 from ikpy.utils import geometry
 
+# from lerobot.robots.so101_follower import SO101Follower, SO101FollowerConfig
 
-# ---------------- ROBOT SETUP ---------------- #
+from utils import *
 
+# --------------- begin robot config
 JOINT_NAMES = [
     'shoulder_pan',
     'shoulder_lift',
@@ -25,32 +25,92 @@ JOINT_NAMES = [
     'gripper',
 ]
 
-PICK_Z_ABOVE = 0.12
-PICK_Z_GRASP = 0.04
-PLACE_POS = np.array([0.1, 0.2, 0.2])
-
-
 URDF_PATH = 'so101_new_calib.urdf'
 my_chain = ikpy.chain.Chain.from_urdf_file(URDF_PATH)
-my_chain.active_links_mask[0] = False
+my_chain.active_links_mask[0]=False
 
+# Configure robot
 port = "/dev/arm_f4"
-calibration_dir = "calibrations/"
-robot_config = SO101FollowerConfig(
-    port=port,
-    id="arm_f4",
-    calibration_dir=Path(calibration_dir)
-)
+# robot_config = SO101FollowerConfig(port=port, id='arm_f1')
+calibration_dir='calibrations/'
+robot_config = SO101FollowerConfig(port=port, id='arm_f4', calibration_dir=Path(calibration_dir))
 
 robot = SO101Follower(robot_config)
 robot.connect()
 robot.bus.disable_torque()
 
+# IMPORTANT for setting maximum velocity and acceleration
+v = 500
+a = 10
 for j in JOINT_NAMES:
-    robot.bus.write("Goal_Velocity", j, 500)
-    robot.bus.write("Acceleration", j, 10)
+    robot.bus.write("Goal_Velocity", j, v)
+    robot.bus.write("Acceleration", j, a)
+# --------------- end robot config
 
-# ---------------- CAMERA SETUP ---------------- #
+last_point = None
+
+def save_homography(im):
+    try:
+        corners = workspace_utils.get_workspace_corners(im, draw_markers=True)
+        H1, H2 = workspace_utils.calculate_homography_mapping(corners)
+    except Exception:
+        print("Can't read April tags.")
+        return None, None
+
+    np.savez('homography_3b.npz', H1=H1, H2=H2)
+    return H1, H2
+
+def load_homography():
+    data = np.load('homography_3b.npz')
+    return data['H1'], data['H2']
+
+def move_robot(pt, gripper):
+    target_orientation = geometry.rpy_matrix(0, np.deg2rad(180), 0)  # point down
+    ik = my_chain.inverse_kinematics(pt, target_orientation, 'all', optimizer='scalar')
+    ik[-1] = gripper
+    action = {JOINT_NAMES[i]+'.pos': np.rad2deg(v) for i, v in enumerate(ik[1:])}
+
+    robot.send_action(action)
+    time.sleep(1)
+
+
+PICK_Z = 0.02
+APPROACH_Z = 0.08
+def pick_and_move_block(pt_im):
+    pt = H2 @ pt_im
+    pt /= pt[2]
+    # print(pt)
+
+    # move robot above block
+    above_pick_pt = np.array([pt[0], pt[1], APPROACH_Z])
+    move_robot(above_pick_pt, 0.7)
+
+    # pick dube
+    pick_pt = np.array([pt[0], pt[1], PICK_Z])
+    move_robot(pick_pt, 0.7)
+
+    # close gripper
+    move_robot(pick_pt, 0)
+
+    # go above picked cube
+    move_robot(above_pick_pt, 0)
+
+    # go above drop location
+    # droppali bomo na istem x, samo y bomo obrnili - gremo iz ene strani na drugo
+    above_drop_pt = np.array([pt[0], -pt[1], APPROACH_Z])
+    move_robot(above_drop_pt, 0.0)
+
+    # place the block and open gripper
+    place_pt = np.array([pt[0], -pt[1], PICK_Z])
+    move_robot(above_drop_pt, 0.0)
+    move_robot(above_drop_pt, 0.7)
+
+    # go above drop location
+    move_robot(above_drop_pt, 0.7)
+
+
+# H1, H2 = load_homography()
+H1 = H2 = None
 
 w, h = 1600, 1200
 camera_id = 0
@@ -64,183 +124,90 @@ cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M','J','P','G'))
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, w)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, h)
 
-if not cap.isOpened():
-    raise RuntimeError("Camera not opened")
-
-# ---------------- HOMOGRAPHY INIT ---------------- #
-
-ret, frame = cap.read()
-if not ret:
-    raise RuntimeError("Failed to grab initial frame")
-
-undistorted = cv2.undistort(frame, M, D)
-rotated = cv2.rotate(undistorted, cv2.ROTATE_180)
-im = cv2.cvtColor(rotated, cv2.COLOR_BGR2RGB)
-
-corners = workspace_utils.get_workspace_corners(im, draw_markers=True)
-H1, H2 = workspace_utils.calculate_homography_mapping(corners)
-
-# workspace mask
-points = np.load("tocke2.npy").reshape(4, 2)
-x_min, x_max = int(points[:,0].min()), int(points[:,0].max())
-y_min, y_max = int(points[:,1].min()), int(points[:,1].max())
+cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
 
 # HSV blue limits
 lower = np.array([90, 110, 30])
 upper = np.array([140, 255, 255])
 kernel = np.ones((11,11), np.uint8)
 
-# ---------------- LIVE PLOT ---------------- #
-
-plt.ion()
-fig, ax = plt.subplots(figsize=(6,6))
-
-last_move = time.time()
-
-
-#cv2.namedWindow('neki', cv2.WINDOW_NORMAL)
-#while True:
-    #cv2.imshow('neki', im)
-
-    #if cv2.waitKey(1) & 0xFF == ord("q"):
-        #break
-
-
-# ---------------- MAIN LOOP ---------------- #
-
-def move_robot(target_position, gripper_open=True):
-    target_orientation = geometry.rpy_matrix(
-        0, np.deg2rad(180), 0
-    )
-
-    ik = my_chain.inverse_kinematics(
-        target_position,
-        target_orientation,
-        'all',
-        optimizer='scalar'
-    )
-
-    # gripper control
-    ik[-1] = 90 if gripper_open else 0
-
-    action = {
-        JOINT_NAMES[i] + '.pos': np.rad2deg(v)
-        for i, v in enumerate(ik[1:])
-    }
-
-    robot.send_action(action)
-    time.sleep(0.6)
-
-
 while True:
-
+    # Poskusimo pridobiti trenutno sliko s spletne kamere
     ret, frame = cap.read()
+
+    # Če to ni mogoče (kamera izključena, itd.), končamo z izvajanjem funkcije
     if not ret:
         break
 
     undistorted = cv2.undistort(frame, M, D)
-    rotated = cv2.rotate(undistorted, cv2.ROTATE_180)
-    im = cv2.cvtColor(rotated, cv2.COLOR_BGR2RGB)
+    im = cv2.rotate(undistorted, cv2.ROTATE_180)
+    im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
-    warped = cv2.warpPerspective(im, H1, (1000, 1000))
+    # če rabiš testing "brez kamere", odkomentiraj to
+    # ------ start test
+    # im_path = 'capture_f1.jpg'
+    # im = cv2.imread(im_path)
+    # ------ end test
 
-    workspace_mask = np.zeros(warped.shape[:2], dtype=np.uint8)
-    workspace_mask[y_min:y_max, x_min:x_max] = 255
-    masked = cv2.bitwise_and(warped, warped, mask=workspace_mask)
+    if H1 is None or H2 is None:
+        H1, H2 = save_homography(im)
 
-    hsv = cv2.cvtColor(masked, cv2.COLOR_RGB2HSV)
-    mask = cv2.inRange(hsv, lower, upper)
-    closed = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+    if H1 is not None:
+        im = cv2.warpPerspective(im, H1, (1000, 1000))
+    
+    if H2 is not None:
+        # grid mask - smiselno je iskati objekte samo znotraj grida, ker je sicer okoli dosti šuma (drugih objektov)
+        points = np.load("tocke2.npy").reshape(4, 2)
+        x_min, x_max = int(points[:,0].min()), int(points[:,0].max())
+        y_min, y_max = int(points[:,1].min()), int(points[:,1].max())
 
-num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
-    closed, connectivity=4
-)
+        grid_mask = np.zeros(im.shape[:2], dtype=np.uint8)
+        grid_mask[y_min:y_max, x_min:x_max] = 255
+        im_grid = cv2.bitwise_and(im, im, mask=grid_mask)
 
-# ignore background, sort by area (largest first)
-objects = [
-    (i, stats[i, cv2.CC_STAT_AREA])
-    for i in range(1, num_labels)
-    if stats[i, cv2.CC_STAT_AREA] > 300  # area threshold
-]
+        hsv = cv2.cvtColor(im_grid, cv2.COLOR_RGB2HSV)
+        mask = cv2.inRange(hsv, lower, upper)
+        closed = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
 
-objects.sort(key=lambda x: x[1], reverse=True)
+        num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
+            closed, connectivity=4
+        )
 
-for i, _ in objects:
+        if num_labels > 1:
+            cx, cy = centroids[1]
+            cx, cy = int(cx), int(cy)
+        
+            robo_point = H2 @ np.array([cx, cy, 1.0])
+            robo_point /= robo_point[2]
+            
+            if cy > 0: # move all blocks from left side to the right
+                pick_and_move_block(np.array([cx, cy, 1.0]))
 
-    cx, cy = centroids[i]
-    cx, cy = int(cx), int(cy)
+                cv2.circle(im, (cx, cy), 5, (255, 0, 0), -1)
 
-    # visualize
-    ax.plot(cx, cy, 'ro', markersize=6)
+                text = f"{robo_point[0]:.2f}, {robo_point[1]:.2f}"
+                # Draw black outline (thicker)
+                cv2.putText(
+                    im, text, (cx + 10, cy - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                    (0, 0, 0), 3, cv2.LINE_AA
+                )
 
-    # --- map to robot coords ---
-    pt = np.array([cx, cy, 1.0])
-    mapped = H2 @ pt
-    mapped /= mapped[2]
+                # Draw white text on top
+                cv2.putText(
+                    im, text, (cx + 10, cy - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                    (255, 255, 255), 1, cv2.LINE_AA
+                )
 
-    Xr, Yr = mapped[0], mapped[1]
+    im = cv2.cvtColor(im, cv2.COLOR_RGB2BGR)
+    cv2.imshow('frame', im)
+    time.sleep(0.01)
 
-    # ---------------- PICK ---------------- #
-
-    # above object
-    move_robot(
-        np.array([Xr, Yr, PICK_Z_ABOVE]),
-        gripper_open=True
-    )
-
-    # down to grasp
-    move_robot(
-        np.array([Xr, Yr, PICK_Z_GRASP]),
-        gripper_open=True
-    )
-
-    # close gripper
-    move_robot(
-        np.array([Xr, Yr, PICK_Z_GRASP]),
-        gripper_open=False
-    )
-
-    # lift
-    move_robot(
-        np.array([Xr, Yr, PICK_Z_ABOVE]),
-        gripper_open=False
-    )
-
-    # ---------------- PLACE ---------------- #
-
-    move_robot(
-        PLACE_POS,
-        gripper_open=False
-    )
-
-    # open gripper
-    move_robot(
-        PLACE_POS,
-        gripper_open=True
-    )
-
-    time.sleep(0.5)
-
-        #if time.time() - last_move > 0.1:
-            #target = np.array([Xr, Yr, 0.08])
-            #ik = my_chain.inverse_kinematics(target, optimizer="scalar")
-
-            #action = {
-                #JOINT_NAMES[i] + ".pos": np.rad2deg(v)
-                #for i, v in enumerate(ik[1:])
-            #}
-
-            #robot.send_action(action)
-            #last_move = time.time()
-
-    #plt.pause(0.001)
-
-    if cv2.waitKey(1) & 0xFF == ord("q"):
+    if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-# ---------------- CLEANUP ---------------- #
-
 cap.release()
-plt.ioff()
-plt.close()
 cv2.destroyAllWindows()
+
+
