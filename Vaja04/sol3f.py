@@ -72,10 +72,9 @@ def load_homography():
     data = np.load('homography_3f.npz')
     return data['H1'], data['H2']
 
-def move_robot(pt, gripper, orientation_mode='all', timeout=3.0):
-    target_orientation = geometry.rpy_matrix(0, np.deg2rad(180), 0)  # point down
-    if num_cubes_towered == 4:
-        target_orientation = geometry.rpy_matrix(0, np.deg2rad(160), 0)  # don't point completely down for last cube
+def move_robot(pt, gripper, orientation_mode='all', timeout=3.0, target_orientation=None):
+    if target_orientation is None:
+        target_orientation = geometry.rpy_matrix(0, np.deg2rad(180), 0)  # point down
     ik = my_chain.inverse_kinematics(pt, target_orientation, orientation_mode, optimizer='scalar')
     ik[-1] = gripper
     action = {JOINT_NAMES[i]+'.pos': np.rad2deg(v) for i, v in enumerate(ik[1:])}
@@ -95,23 +94,23 @@ def slowly_open_gripper(ik):
 
 
 PICK_Z = 0.03
-DROP_Z = 0.03
-APPROACH_Z = 0.13
+DROP_Z = 0.035
+APPROACH_Z = 0.14
 CUBE_SIZE = 0.020
 DROP_OFFSET = [0.22, 0.01]
+DROP_OFFSET_LAST = [0.20, 0.14]
 def pick_and_stack_block(pt_im):
-    pt = H2 @ pt_im
-    pt /= pt[2]
-    # print(pt)
+    robo_pt = H2 @ pt_im
+    robo_pt /= robo_pt[2]
 
     # centroid, ki ga vidimo ni čisto točno tam, kjer je kocka - to popravi
-    pick_x, pick_y = pt[0], pt[1]
-    if pt[1] > 0: # ko gremo na levo stran malo overshoota - moramo zmanjšati x in y
+    pick_x, pick_y = robo_pt[0], robo_pt[1]
+    if robo_pt[1] > 0: # ko gremo na levo stran malo overshoota - moramo zmanjšati x in y
         pick_x += -0.04
         pick_y += -0.01
     else: # ko gremo na desno stran malo overshoota - moramo povečati x in y
         pick_x += -0.05
-        pick_y += 0.025
+        pick_y += 0.03
 
     # move robot above block
     above_pick_pt = np.array([pick_x, pick_y, APPROACH_Z])
@@ -128,30 +127,47 @@ def pick_and_stack_block(pt_im):
     move_robot(above_pick_pt, 0, timeout=1)
     move_robot(above_pick_pt, 0, orientation_mode=None, timeout=1)
 
-    # go above drop location
-    # droppali bomo na istem x, samo y bomo obrnili - gremo iz ene strani na drugo
-    above_drop_pt = np.array([*DROP_OFFSET, APPROACH_Z])
-    above_drop_pt[0] += 0.03 # preprečimo, da se robot prevrne nazaj
-    move_robot(above_drop_pt, 0.0, orientation_mode=None)
-    move_robot(above_drop_pt, 0.0, timeout=1)
+    if num_cubes_towered == 4:
+        # četrto kocko rabimo drugače obravnavati, ker je stolp previsok za rotacijo dol
+        # go above drop location
+        # droppali bomo na istem x, samo y bomo obrnili - gremo iz ene strani na drugo
+        above_drop_pt = np.array([*DROP_OFFSET_LAST, APPROACH_Z+0.1])
+        move_robot(above_drop_pt, 0.0, orientation_mode=None)
+        move_robot(above_drop_pt, 0.0, timeout=1, target_orientation=geometry.rpy_matrix(0, np.deg2rad(160), 0))
 
-    stack_z = DROP_Z + CUBE_SIZE * (num_cubes_towered - 1)
+        stack_z = DROP_Z + CUBE_SIZE * (num_cubes_towered - 1)
 
-    # place the block and open gripper
-    place_pt = np.array([*DROP_OFFSET, stack_z])
-    ik_placed = move_robot(place_pt, 0.0)
-    slowly_open_gripper(ik_placed) # slowly open gripper, so that cube doesn't suddenly fall out
-    move_robot(place_pt, 0.7)
+        # place the block and open gripper
+        place_pt = np.array([*DROP_OFFSET_LAST, stack_z])
+        ik_placed = move_robot(place_pt, 0.0, target_orientation=geometry.rpy_matrix(0, np.deg2rad(160), 0))
+        slowly_open_gripper(ik_placed) # slowly open gripper, so that cube doesn't suddenly fall out
+        move_robot(place_pt, 0.7, target_orientation=geometry.rpy_matrix(0, np.deg2rad(160), 0))
+    else:
+        # go above drop location
+        # droppali bomo na istem x, samo y bomo obrnili - gremo iz ene strani na drugo
+        above_drop_pt = np.array([*DROP_OFFSET, APPROACH_Z])
+        above_drop_pt2 = above_drop_pt
+        above_drop_pt2[0] += 0.03 # preprečimo, da se robot prevrne nazaj
+        move_robot(above_drop_pt2, 0.0, orientation_mode=None)
+        move_robot(above_drop_pt, 0.0, timeout=1)
+
+        stack_z = DROP_Z + CUBE_SIZE * (num_cubes_towered - 1)
+
+        # place the block and open gripper
+        place_pt = np.array([*DROP_OFFSET, stack_z])
+        ik_placed = move_robot(place_pt, 0.0)
+        slowly_open_gripper(ik_placed) # slowly open gripper, so that cube doesn't suddenly fall out
+        move_robot(place_pt, 0.7)
 
     # go a bit away from the tower
     away_pt = [*place_pt]
-    away_pt[1] += 0.02
+    away_pt[1] += 0.025
     move_robot(away_pt, 0.7, timeout=1)
     move_robot(away_pt, 0.7, orientation_mode=None, timeout=1)
 
     # go above tower
     away_pt[2] = APPROACH_Z
-    move_robot(away_pt, 0.7, timeout=1)
+    move_robot(away_pt, 0.7, timeout=1, orientation_mode=None)
 
 
 def robot_worker():
@@ -181,6 +197,7 @@ def process_blocks(mask):
         if robot_busy.is_set():
             continue
 
+        print(robo_point)
         robot_busy.set()
         num_cubes_towered += 1
         last_point = (cx, cy)
@@ -207,14 +224,14 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT, h)
 cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
 
 # HSV blue limits
-blue_lower = np.array([80, 110, 60])
+blue_lower = np.array([80, 80, 60])
 
 blue_upper = np.array([150, 255, 255])
 
 # HSV red limits (two ranges)
-red_lower1 = np.array([0, 220, 110])
+red_lower1 = np.array([0, 160, 110])
 red_upper1 = np.array([10, 255, 255])
-red_lower2 = np.array([170, 220, 110])
+red_lower2 = np.array([170, 160, 110])
 red_upper2 = np.array([180, 255, 255])
 
 kernel = np.ones((11,11), np.uint8)
@@ -254,7 +271,7 @@ while True:
         im_grid = cv2.bitwise_and(im, im, mask=grid_mask)
 
         tower_mask = np.ones(im.shape[:2], dtype=np.uint8)
-        tower_mask[400:740, 470:580] = 0
+        tower_mask[350:740, 440:580] = 0
         im_grid = cv2.bitwise_and(im_grid, im_grid, mask=tower_mask)
 
         hsv = cv2.cvtColor(im_grid, cv2.COLOR_RGB2HSV)
@@ -271,7 +288,7 @@ while True:
 
         blue_closed = cv2.morphologyEx(blue_opened, cv2.MORPH_CLOSE, kernel)
         red_closed  = cv2.morphologyEx(red_opened,  cv2.MORPH_CLOSE, kernel)
-
+        merged_mask = cv2.bitwise_or(red_closed, blue_closed)
 
         # Blue: left -> right (ignore already-right blocks)
         process_blocks(
@@ -305,8 +322,16 @@ while True:
             (255, 255, 255), 1, cv2.LINE_AA
         )
 
+    merged_mask = np.repeat(merged_mask[:, :, None], 3, axis=2)
+
     im = cv2.cvtColor(im, cv2.COLOR_RGB2BGR)
-    cv2.imshow('frame', im_grid)
+    im_grid = cv2.cvtColor(im_grid, cv2.COLOR_RGB2BGR)
+
+    stack1 = np.hstack((im, merged_mask))
+    stack2 = np.hstack((im_grid, np.zeros_like(im_grid)))
+    out = np.vstack((stack1, stack2))
+
+    cv2.imshow('frame', out)
     time.sleep(0.01)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):

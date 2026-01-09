@@ -74,12 +74,12 @@ def click_event(event, x, y, flags, param):
 
 
 def send_robot_to_point(pt_im):
-    print(pt_im)
-    pt = H2 @ pt_im
-    pt /= pt[2]
+    robo_pt = H2 @ pt_im
+    robo_pt /= robo_pt[2]
+    print(pt_im, robo_pt)
 
     # dobili smo x in y; z koordinato bomo hardcodali na 0.08
-    pt[2] = 0.08
+    robo_pt[2] = 0.08
 
     target_orientation = geometry.rpy_matrix(0, np.deg2rad(180), 0)  # point down
     # target_orientation = np.eye(3)
@@ -89,7 +89,7 @@ def send_robot_to_point(pt_im):
     # alpha = np.clip((z - 0.04) / 0.04, 0.0, 1.0)
     # down = geometry.rpy_matrix(0, np.deg2rad(180), 0)
 
-    ik = my_chain.inverse_kinematics(pt, target_orientation, 'all', optimizer='scalar')
+    ik = my_chain.inverse_kinematics(robo_pt, target_orientation, 'all', optimizer='scalar')
     # ik = my_chain.inverse_kinematics(pt, optimizer='scalar')
     action = {JOINT_NAMES[i]+'.pos': np.rad2deg(v) for i, v in enumerate(ik[1:])}
 
@@ -97,7 +97,7 @@ def send_robot_to_point(pt_im):
 
 
 H1, H2 = load_homography()
-# H1 = H2 = None
+H1 = H2 = None
 
 w, h = 1600, 1200
 camera_id = 1
