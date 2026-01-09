@@ -65,11 +65,11 @@ def save_homography(im):
         print("Can't read April tags.")
         return None, None
 
-    np.savez('homography_3e.npz', H1=H1, H2=H2)
+    np.savez('homography_3f.npz', H1=H1, H2=H2)
     return H1, H2
 
 def load_homography():
-    data = np.load('homography_3e.npz')
+    data = np.load('homography_3f.npz')
     return data['H1'], data['H2']
 
 def move_robot(pt, gripper, orientation_mode='all', timeout=3.0):
