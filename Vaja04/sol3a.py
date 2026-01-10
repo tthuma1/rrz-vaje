@@ -18,7 +18,7 @@ im_path = 'moja_slika2.jpg'
 im = cv2.imread(im_path)
 im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
-save_homography(im)
+# save_homography(im)
 H1, H2 = load_homography()
 
 delovna_povrsina = cv2.warpPerspective(im, H1, (1000, 1000))

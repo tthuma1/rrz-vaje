@@ -1,6 +1,7 @@
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.patheffects as pe
 
 ### a)
 
@@ -61,6 +62,52 @@ plt.subplot(1,2,2)
 plt.imshow(im2)
 plt.plot(xv, yv, 'r.', markersize=0.5)
 plt.title('Warped')
+
+# add text
+plt.subplot(1,2,1)
+plt.text(
+    mesh_points_inv[0][0], mesh_points_inv[1][1],
+    "0,0",
+    color='white',
+    fontsize=10,
+    path_effects=[
+        pe.Stroke(linewidth=1, foreground='black'),
+        pe.Normal()
+    ]
+)
+
+plt.text(
+    mesh_points_inv[0][40], mesh_points_inv[1][40],
+    "400,0",
+    color='white',
+    fontsize=10,
+    path_effects=[
+        pe.Stroke(linewidth=1, foreground='black'),
+        pe.Normal()
+    ]
+)
+
+plt.text(
+    mesh_points_inv[0][41*28-1-40], mesh_points_inv[1][41*28-1-40],
+    "0,270",
+    color='white',
+    fontsize=10,
+    path_effects=[
+        pe.Stroke(linewidth=1, foreground='black'),
+        pe.Normal()
+    ]
+)
+
+plt.text(
+    mesh_points_inv[0][41*28-1], mesh_points_inv[1][41*28-1],
+    "400,270",
+    color='white',
+    fontsize=10,
+    path_effects=[
+        pe.Stroke(linewidth=1, foreground='black'),
+        pe.Normal()
+    ]
+)
 
 plt.tight_layout()
 plt.show()
